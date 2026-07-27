@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from src.masters.router import router as masters_router
 
 
-app = FastAPI()
+app = FastAPI(title="MasterBooking")
 
 app.include_router(masters_router)
 
