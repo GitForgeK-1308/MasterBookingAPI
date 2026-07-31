@@ -1,10 +1,12 @@
 import uuid
+from typing import TYPE_CHECKING
 from src.database.base import Base
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-
+if TYPE_CHECKING:
+    from src.master_services.models import MasterOffering
 
 class Master(Base):
     __tablename__ = "masters"
@@ -22,3 +24,7 @@ class Master(Base):
     education: Mapped[str] = mapped_column(Text, nullable=False)
 
     is_active: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+
+
+    master_services: Mapped[list["MasterOffering"]] = relationship(back_populates="master")
