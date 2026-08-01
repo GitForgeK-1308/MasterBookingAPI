@@ -6,7 +6,7 @@ from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
-    from src.master_services.models import MasterOffering
+    from src.master_offering.models import MasterOffering
 
 class Master(Base):
     __tablename__ = "masters"
@@ -23,8 +23,12 @@ class Master(Base):
     experience: Mapped[int] = mapped_column(default=0, nullable=False)
     education: Mapped[str] = mapped_column(Text, nullable=False)
 
-    is_active: Mapped[bool] = mapped_column(default=False, nullable=False)
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
 
 
 
-    master_services: Mapped[list["MasterOffering"]] = relationship(back_populates="master")
+    master_services: Mapped[list["MasterOffering"]] = relationship(
+        back_populates="master",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        )
