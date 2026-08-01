@@ -5,6 +5,7 @@ pytest_plugins = [
     "tests.fixtures.database",
     "tests.fixtures.client",
     "tests.fixtures.masters",
+    "tests.fixtures.master_offering",
 ]
 
 
