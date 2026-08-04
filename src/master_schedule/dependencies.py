@@ -2,15 +2,18 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.session import get_async_session
+from src.masters.repository import MasterRepository
 from src.master_schedule.repository import MasterScheduleRepository
 from src.master_schedule.service import MasterScheduleService
 
 
 def get_schedule_service(
-    session: AsyncSession = Depends(get_async_session)
+    session: AsyncSession = Depends(get_async_session),
 ) -> MasterScheduleService:
+    schedule_repository = MasterScheduleRepository(session)
+    master_repository = MasterRepository(session)
 
-    repository = MasterScheduleRepository(session)
-
-
-    return MasterScheduleService(repository)
+    return MasterScheduleService(
+        schedule_repository=schedule_repository,
+        master_repository=master_repository,
+    )

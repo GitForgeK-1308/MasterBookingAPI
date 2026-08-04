@@ -8,6 +8,11 @@ from fastapi import (
     status,
 )
 
+from src.master_schedule.exceptions import (
+    MasterNotFoundError,
+    ScheduleAlreadyExistsError,
+)
+
 from src.master_schedule.dependencies import get_schedule_service
 from src.master_schedule.schemas import (
     MasterScheduleCreate,
@@ -32,18 +37,23 @@ async def create_schedule(
         get_schedule_service
     ),
 ):
-    schedule = await service.create_schedule(
-        master_id,
-        data,
-    )
+    try:
+        return await service.create_schedule(
+            master_id,
+            data,
+        )
 
-    if schedule is None:
+    except MasterNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Мастер не найден!",
+        )
+
+    except ScheduleAlreadyExistsError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Расписание на этот день уже существует!",
         )
-
-    return schedule
 
 
 @router.get(
