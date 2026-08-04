@@ -1,7 +1,7 @@
 import uuid
 from decimal import Decimal
-from pydantic import BaseModel, ConfigDict
 
+from pydantic import BaseModel, ConfigDict
 
 
 class MasterOfferingBase(BaseModel):

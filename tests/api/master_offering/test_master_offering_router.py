@@ -1,13 +1,12 @@
 import uuid
-import pytest
 from decimal import Decimal
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from httpx import AsyncClient
-from src.masters.models import Master
-from src.master_offering.models import MasterOffering
-from tests.fixtures.database import db_session
 
+import pytest
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.master_offering.models import MasterOffering
+from src.masters.models import Master
 
 
 @pytest.mark.anyio

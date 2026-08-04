@@ -1,14 +1,10 @@
 import uuid
 
-from fastapi import HTTPException, status
-from src.masters.schemas import MasterResponse
-from src.masters.schemas import MasterCreate, MasterUpdate
-from src.masters.service import MasterService
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from src.masters.dependencies import get_master_service
-from fastapi import APIRouter, status, Depends
-
-
-
+from src.masters.schemas import MasterCreate, MasterResponse, MasterUpdate
+from src.masters.service import MasterService
 
 router = APIRouter(prefix="/masters", tags=["Masters"])
 

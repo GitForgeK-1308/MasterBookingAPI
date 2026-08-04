@@ -1,8 +1,10 @@
 import uuid
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.masters.repository import MasterRepository
+
 from src.masters.models import Master
+from src.masters.repository import MasterRepository
 
 
 @pytest.mark.anyio
@@ -40,7 +42,7 @@ async def test_get_by_id_master(
 
     master = await master_repository.get_by_id(create_master.id)
 
-    assert "id" is not None
+    assert "id" != None
 
     assert master.id == create_master.id
 

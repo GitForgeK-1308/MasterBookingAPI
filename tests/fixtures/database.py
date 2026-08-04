@@ -10,7 +10,6 @@ from sqlalchemy.pool import NullPool
 
 from src.database.models import Base
 
-
 TEST_DATABASE_URL = (
     "postgresql+asyncpg://kirill1308:admin@localhost:5432/master_booking_test"
 )

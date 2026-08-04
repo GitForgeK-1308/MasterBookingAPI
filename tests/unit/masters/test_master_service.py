@@ -1,11 +1,12 @@
 import uuid
-import pytest
-from fastapi import HTTPException
 from unittest.mock import AsyncMock
+
+import pytest
+
 from src.masters.models import Master
-from src.masters.service import MasterService
 from src.masters.repository import MasterRepository
 from src.masters.schemas import MasterUpdate
+from src.masters.service import MasterService
 
 
 @pytest.mark.anyio

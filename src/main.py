@@ -1,7 +1,8 @@
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
-from src.masters.router import router as masters_router
+from fastapi.middleware.cors import CORSMiddleware
+
 from src.master_offering.router import router as service_router
+from src.masters.router import router as masters_router
 
 app = FastAPI(title="MasterBooking")
 

@@ -1,12 +1,12 @@
 import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Text, Numeric, ForeignKey
+
+from sqlalchemy import ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.base import Base
-
 
 if TYPE_CHECKING:
     from src.masters.models import Master

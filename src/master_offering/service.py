@@ -1,9 +1,8 @@
 import uuid
 
-from src.master_offering.repository import MasterOfferingRepository
 from src.master_offering.models import MasterOffering
+from src.master_offering.repository import MasterOfferingRepository
 from src.master_offering.schemas import MasterOfferingCreate, MasterOfferingUpdate
-
 
 
 class MasterOfferingService:

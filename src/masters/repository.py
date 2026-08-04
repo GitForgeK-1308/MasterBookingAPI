@@ -1,9 +1,9 @@
 import uuid
+
 from sqlalchemy import select
-from src.masters.models import Master
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
+from src.masters.models import Master
 
 
 class MasterRepository:

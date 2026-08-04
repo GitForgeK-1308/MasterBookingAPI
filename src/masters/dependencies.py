@@ -1,9 +1,9 @@
 from fastapi import Depends
-from src.database.session import get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.masters.repository  import MasterRepository
-from src.masters.service import MasterService
 
+from src.database.session import get_async_session
+from src.masters.repository import MasterRepository
+from src.masters.service import MasterService
 
 
 def get_master_service(

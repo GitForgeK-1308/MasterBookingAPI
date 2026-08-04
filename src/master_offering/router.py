@@ -1,9 +1,14 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
-from src.master_offering.schemas import MasterOfferingResponse, MasterOfferingCreate
-from src.master_offering.dependencies import get_offering_service
-from src.master_offering.service import MasterOfferingService
 
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from src.master_offering.dependencies import get_offering_service
+from src.master_offering.schemas import (
+    MasterOfferingCreate,
+    MasterOfferingResponse,
+    MasterOfferingUpdate,
+)
+from src.master_offering.service import MasterOfferingService
 
 router = APIRouter(tags=["Offerings"])
 
@@ -51,7 +56,45 @@ async def get_offering_by_id(
     return offering
 
 
+@router.patch(
+    "/offerings/{offering_id}",
+    response_model=MasterOfferingResponse,
+)
 
+
+async def patch_offering(
+    data: MasterOfferingUpdate,
+    offering_id: uuid.UUID, 
+    service: MasterOfferingService = Depends(get_offering_service)
+):
+
+    offering_update = await service.update_offering(
+        offering_id,
+        data,
+    )
+
+
+    if not offering_update:
+        raise HTTPException(status_code=404, detail="Мастер не найден!")
+
+    return offering_update
+
+
+@router.delete(
+    "/offerings/{offering_id}",
+    status_code=status.HTTP_204_NO_CONTENT)
+async def delete_offering(
+    offering_id: uuid.UUID,
+    service: MasterOfferingService = Depends(get_offering_service)
+):
+
+    master = await service.delete_offering(offering_id)
+
+    if master is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Мастер не найден!"
+        )
 
 
 

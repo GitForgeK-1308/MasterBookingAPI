@@ -1,9 +1,8 @@
 import uuid
 
-from src.masters.repository import MasterRepository
 from src.masters.models import Master
+from src.masters.repository import MasterRepository
 from src.masters.schemas import MasterCreate, MasterUpdate
-
 
 
 class MasterService:

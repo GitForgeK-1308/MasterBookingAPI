@@ -1,9 +1,11 @@
 import uuid
 from typing import TYPE_CHECKING
-from src.database.base import Base
-from sqlalchemy.dialects.postgresql import UUID
+
 from sqlalchemy import String, Text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from src.database.base import Base
 
 if TYPE_CHECKING:
     from src.master_offering.models import MasterOffering
