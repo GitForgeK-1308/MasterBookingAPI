@@ -19,7 +19,7 @@ async def test_get_all_empty(
 
 @pytest.mark.anyio
 async def test_get_all_with_master(
-    create_master,
+    create_master: Master,
     master_repository: MasterRepository,
     
 ):
@@ -35,7 +35,7 @@ async def test_get_all_with_master(
 
 @pytest.mark.anyio
 async def test_get_by_id_master(
-    create_master,
+    create_master: Master,
     master_repository: MasterRepository,
     
 ):

@@ -3,6 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.master_offering.models import MasterOffering
 from src.masters.models import Master
+from src.master_offering.repository import MasterOfferingRepository
+
+
+@pytest.fixture
+def offering_repository(
+    db_session: AsyncSession,
+) -> MasterOfferingRepository:
+    return MasterOfferingRepository(db_session)
 
 
 @pytest.fixture
