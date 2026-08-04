@@ -91,7 +91,6 @@ async def get_schedule_by_id(
 @router.patch(
     "/schedules/{schedule_id}",
     response_model=MasterScheduleResponse,
-    status_code=status.HTTP_200_OK,
 )
 async def update_schedule(
     schedule_id: uuid.UUID,
@@ -100,10 +99,16 @@ async def update_schedule(
         get_schedule_service
     ),
 ):
-    schedule = await service.update_schedule(
-        schedule_id,
-        data,
-    )
+    try:
+        schedule = await service.update_schedule(
+            schedule_id,
+            data,
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(error),
+        )
 
     if schedule is None:
         raise HTTPException(

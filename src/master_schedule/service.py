@@ -65,28 +65,56 @@ class MasterScheduleService:
             new_schedule
         )
 
+
     async def update_schedule(
-        self,
-        schedule_id: uuid.UUID,
-        data: MasterScheduleUpdate,
-    ) -> MasterSchedule | None:
-        schedule = await self.repository.get_by_id(
-            schedule_id
-        )
+    self,
+    schedule_id: uuid.UUID,
+    data: MasterScheduleUpdate,
+) -> MasterSchedule | None:
+
+        schedule = await self.repository.get_by_id(schedule_id)
 
         if schedule is None:
             return None
 
-        data_dict = data.model_dump(
-            exclude_unset=True,
+        data_dict = data.model_dump(exclude_unset=True)
+
+        new_start_time = data_dict.get(
+            "start_time",
+            schedule.start_time,
         )
+        new_end_time = data_dict.get(
+            "end_time",
+            schedule.end_time,
+        )
+        new_is_working = data_dict.get(
+            "is_working",
+            schedule.is_working,
+        )
+
+        if new_is_working:
+            if new_start_time is None or new_end_time is None:
+                raise ValueError(
+                    "Для рабочего дня необходимо указать время начала и окончания"
+                )
+
+            if new_start_time >= new_end_time:
+                raise ValueError(
+                    "Время начала должно быть раньше времени окончания"
+                )
+
+        else:
+            new_start_time = None
+            new_end_time = None
+
+            data_dict["start_time"] = None
+            data_dict["end_time"] = None
 
         for key, value in data_dict.items():
             setattr(schedule, key, value)
 
-        return await self.repository.update(
-            schedule
-        )
+        return await self.repository.update(schedule)
+
 
     async def delete_schedule(
         self,

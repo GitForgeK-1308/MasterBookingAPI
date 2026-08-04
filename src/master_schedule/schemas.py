@@ -1,7 +1,7 @@
 import uuid
 from src.master_schedule.models import WeekDay
 from datetime import time
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class MasterScheduleBase(BaseModel):
@@ -11,7 +11,27 @@ class MasterScheduleBase(BaseModel):
     is_working: bool = True
 
 class MasterScheduleCreate(MasterScheduleBase):
-    pass
+    
+    @model_validator(mode="after")
+    def validate_schedule(self):
+        if self.is_working:
+            if self.start_time is None or self.end_time is None:
+                raise ValueError(
+                    "Для рабочего дня необходимо указать время начала и окончания"
+                )
+
+            if self.start_time >= self.end_time:
+                raise ValueError(
+                    "Время начала должно быть раньше времени окончания"
+                )
+
+        else:
+            if self.start_time is not None or self.end_time is not None:
+                raise ValueError(
+                    "Для выходного дня время указывать не нужно"
+                )
+
+        return self
 
 
 class MasterScheduleUpdate(BaseModel):
