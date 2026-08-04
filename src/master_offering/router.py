@@ -75,7 +75,7 @@ async def patch_offering(
 
 
     if not offering_update:
-        raise HTTPException(status_code=404, detail="Мастер не найден!")
+        raise HTTPException(status_code=404, detail="Услуга не найдена!")
 
     return offering_update
 
@@ -83,17 +83,18 @@ async def patch_offering(
 @router.delete(
     "/offerings/{offering_id}",
     status_code=status.HTTP_204_NO_CONTENT)
+
 async def delete_offering(
     offering_id: uuid.UUID,
     service: MasterOfferingService = Depends(get_offering_service)
 ):
 
-    master = await service.delete_offering(offering_id)
+    delete_offering = await service.delete_offering(offering_id)
 
-    if master is None:
+    if delete_offering is None:
         raise HTTPException(
             status_code=404,
-            detail="Мастер не найден!"
+            detail="Услуга не найдена!"
         )
 
 

@@ -2,6 +2,7 @@ import uuid
 from decimal import Decimal
 
 import pytest
+from sqlalchemy import select
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -44,7 +45,11 @@ async def test_get_offering_not_found(ac: AsyncClient):
 
 @pytest.mark.anyio
 
-async def test_create_offering(create_master: Master, db_session: AsyncSession, ac: AsyncClient):
+async def test_create_offering(
+    create_master: Master, 
+    db_session: AsyncSession, 
+    ac: AsyncClient):
+
     payload = {
         "title": "Artem",
         "description": "Petrushka",
@@ -88,30 +93,115 @@ async def test_create_offering(create_master: Master, db_session: AsyncSession, 
     )
 
 
-# @pytest.mark.anyio
-# async def test_create_master_invalid_data(
-#     ac: AsyncClient
-# ):
-#     payload = {
-#         "last_name": "Test",
-#         "description": "Backend developer",
-#         "experience": 3,
-#         "education": "IT"
-#     }
+@pytest.mark.anyio
 
-#     response = await ac.post(
-#         "/masters",
-#         json=payload
-#     )
-
-#     assert response.status_code == 422
-
-#     data = response.json()
-
-#     assert isinstance(data["detail"], list)
-#     assert data["detail"][0]["loc"] == [
-#         "body",
-#         "first_name"
-#     ]
+async def test_patch_offering(
+    create_offering: MasterOffering, 
+    db_session: AsyncSession, 
+    ac: AsyncClient):
 
 
+    payload = {
+        "title": "Сережа",
+        "price": 15,
+    }
+
+    response = await ac.patch(
+        f"/offerings/{create_offering.id}",
+        json=payload,
+    )
+
+    assert response.status_code == 200
+
+
+    data = response.json()
+
+
+    assert data["title"] == payload["title"]
+    assert Decimal(data["price"]) == Decimal("15.00")
+
+    await db_session.refresh(create_offering)
+
+    assert create_offering.title == payload["title"]
+    assert create_offering.price == Decimal("15.00")
+
+
+
+@pytest.mark.anyio
+
+async def test_patch_offering_not_found(
+    create_offering: MasterOffering, 
+    db_session: AsyncSession, 
+    ac: AsyncClient):
+
+
+    fake_id = uuid.uuid4()
+
+    payload = {
+        "title": "Сережа",
+        "price": 15,
+    }
+
+    response = await ac.patch(
+        f"/offerings/{fake_id}",
+        json=payload,
+    )
+
+    assert response.status_code == 404
+
+
+    data = response.json()
+
+
+    assert data["detail"] == "Услуга не найдена!"
+    
+
+@pytest.mark.anyio
+
+async def test_delete_offering(
+    create_offering: MasterOffering, 
+    db_session: AsyncSession, 
+    ac: AsyncClient):
+
+    offering_id = create_offering.id
+
+    response = await ac.delete(
+        f"/offerings/{offering_id}"
+    )
+
+
+    assert response.status_code == 204
+
+    assert response.text == ""
+
+    master_from_database = await db_session.scalar(
+        select(Master).where(Master.id==offering_id)
+    )
+
+    assert master_from_database is None
+
+
+
+@pytest.mark.anyio
+
+async def test_delete_offering_not_found(
+    create_offering: MasterOffering, 
+    db_session: AsyncSession, 
+    ac: AsyncClient):
+
+    fake_id = uuid.uuid4()
+
+    response = await ac.delete(
+        f"/offerings/{fake_id}"
+    )
+
+
+    assert response.status_code == 404
+
+    data = response.json()
+
+
+    assert data["detail"] == "Услуга не найдена!"
+    
+
+   
