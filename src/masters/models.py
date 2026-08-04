@@ -9,6 +9,7 @@ from src.database.base import Base
 
 if TYPE_CHECKING:
     from src.master_offering.models import MasterOffering
+    from src.master_schedule.models import MasterSchedule
 
 class Master(Base):
     __tablename__ = "masters"
@@ -34,3 +35,9 @@ class Master(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
         )
+
+    schedules: Mapped[list["MasterSchedule"]] = relationship(
+        back_populates="master",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+)
