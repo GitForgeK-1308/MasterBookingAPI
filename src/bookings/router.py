@@ -1,0 +1,178 @@
+import uuid
+from datetime import date
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+)
+
+from src.bookings.dependencies import get_booking_service
+from src.bookings.exceptions import (
+    BookingInPastError,
+    BookingNotFoundError,
+    BookingOutsideWorkingHoursError,
+    BookingTimeConflictError,
+    MasterInactiveError,
+    MasterNotFoundError,
+    MasterScheduleUnavailableError,
+    OfferingDoesNotBelongToMasterError,
+    OfferingInactiveError,
+    OfferingNotFoundError,
+)
+from src.bookings.schemas import (
+    BookingCreate,
+    BookingResponse,
+    BookingStatusUpdate,
+)
+from src.bookings.service import BookingService
+
+
+router = APIRouter(tags=["Bookings"])
+
+
+@router.post(
+    "/masters/{master_id}/bookings",
+    response_model=BookingResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_booking(
+    master_id: uuid.UUID,
+    data: BookingCreate,
+    service: BookingService = Depends(
+        get_booking_service
+    ),
+):
+    try:
+        return await service.create_booking(
+            master_id=master_id,
+            data=data,
+        )
+
+    except MasterNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Мастер не найден!",
+        )
+
+    except MasterInactiveError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Мастер сейчас не принимает записи!",
+        )
+
+    except OfferingNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Услуга не найдена!",
+        )
+
+    except OfferingInactiveError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Услуга сейчас недоступна!",
+        )
+
+    except OfferingDoesNotBelongToMasterError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Услуга не принадлежит выбранному мастеру!",
+        )
+
+    except MasterScheduleUnavailableError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Мастер не работает в выбранный день!",
+        )
+
+    except BookingInPastError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Нельзя создать запись на прошедшее время!",
+        )
+
+    except BookingOutsideWorkingHoursError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Выбранное время находится вне рабочего времени мастера!",
+        )
+
+    except BookingTimeConflictError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Выбранное время уже занято!",
+        )
+
+
+@router.get(
+    "/bookings/{booking_id}",
+    response_model=BookingResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_booking_by_id(
+    booking_id: uuid.UUID,
+    service: BookingService = Depends(
+        get_booking_service
+    ),
+):
+    try:
+        return await service.get_booking_by_id(
+            booking_id
+        )
+
+    except BookingNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Бронирование не найдено!",
+        )
+
+
+@router.get(
+    "/masters/{master_id}/bookings",
+    response_model=list[BookingResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_master_bookings(
+    master_id: uuid.UUID,
+    booking_date: date,
+    service: BookingService = Depends(
+        get_booking_service
+    ),
+):
+    try:
+        return await service.get_master_bookings(
+            master_id=master_id,
+            booking_date=booking_date,
+        )
+
+    except MasterNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Мастер не найден!",
+        )
+
+
+@router.patch(
+    "/bookings/{booking_id}/status",
+    response_model=BookingResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def update_booking_status(
+    booking_id: uuid.UUID,
+    data: BookingStatusUpdate,
+    service: BookingService = Depends(
+        get_booking_service
+    ),
+):
+    try:
+        return await service.update_booking_status(
+            booking_id=booking_id,
+            data=data,
+        )
+
+    except BookingNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Бронирование не найдено!",
+        )
