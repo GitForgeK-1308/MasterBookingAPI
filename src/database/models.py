@@ -3,6 +3,7 @@ from src.master_offering.models import MasterOffering
 from src.masters.models import Master
 from src.master_schedule.models import MasterSchedule
 from src.bookings.models import Booking
+from src.users.models import User
 
 __all__ = [
     "Base",
@@ -10,4 +11,5 @@ __all__ = [
     "MasterOffering",
     "MasterSchedule",
     "Booking",
+    "User",
 ]
