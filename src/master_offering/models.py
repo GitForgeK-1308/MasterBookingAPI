@@ -10,6 +10,7 @@ from src.database.base import Base
 
 if TYPE_CHECKING:
     from src.masters.models import Master
+    from src.bookings.models import Booking
 
 class MasterOffering(Base):
 
@@ -44,5 +45,10 @@ class MasterOffering(Base):
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
 
 
-    master: Mapped["Master"] = relationship(back_populates="master_services")
+    master: Mapped["Master"] = relationship(
+        back_populates="master_services"
+    )
 
+    bookings: Mapped[list["Booking"]] = relationship(
+        back_populates="offering",
+    )

@@ -10,6 +10,7 @@ from src.database.base import Base
 if TYPE_CHECKING:
     from src.master_offering.models import MasterOffering
     from src.master_schedule.models import MasterSchedule
+    from src.bookings.models import Booking
 
 class Master(Base):
     __tablename__ = "masters"
@@ -34,10 +35,16 @@ class Master(Base):
         back_populates="master",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        )
+    )
 
     schedules: Mapped[list["MasterSchedule"]] = relationship(
         back_populates="master",
         cascade="all, delete-orphan",
         passive_deletes=True,
-)
+    )
+
+    bookings: Mapped[list["Booking"]] = relationship(
+        back_populates="master",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
