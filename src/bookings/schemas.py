@@ -37,3 +37,10 @@ class BookingResponse(BaseModel):
 
     status: BookingStatus
     created_at: datetime
+
+
+class AvailableSlotsResponse(BaseModel):
+    master_id: uuid.UUID
+    offering_id: uuid.UUID
+    booking_date: date
+    slots: list[time]

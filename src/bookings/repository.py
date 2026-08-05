@@ -52,6 +52,7 @@ class BookingRepository:
             )
         )
 
+
     async def create(
         self,
         booking: Booking,
@@ -71,3 +72,21 @@ class BookingRepository:
         await self.session.refresh(booking)
 
         return booking
+
+
+    async def get_active_by_master_and_date(
+        self,
+        master_id: uuid.UUID,
+        booking_date: date,
+    ) -> list[Booking]:
+        result = await self.session.scalars(
+            select(Booking)
+            .where(
+                Booking.master_id == master_id,
+                Booking.booking_date == booking_date,
+                Booking.status != BookingStatus.CANCELLED,
+            )
+            .order_by(Booking.start_time)
+        )
+
+        return list(result.all())

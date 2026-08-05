@@ -25,6 +25,7 @@ from src.bookings.schemas import (
     BookingCreate,
     BookingResponse,
     BookingStatusUpdate,
+    AvailableSlotsResponse
 )
 from src.bookings.service import BookingService
 
@@ -175,4 +176,67 @@ async def update_booking_status(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Бронирование не найдено!",
+        )
+
+
+@router.get(
+    "/masters/{master_id}/available-slots",
+    response_model=AvailableSlotsResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_available_slots(
+    master_id: uuid.UUID,
+    offering_id: uuid.UUID,
+    booking_date: date,
+    service: BookingService = Depends(
+        get_booking_service
+    ),
+):
+    try:
+        return await service.get_available_slots(
+            master_id=master_id,
+            offering_id=offering_id,
+            booking_date=booking_date,
+        )
+
+    except MasterNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Мастер не найден!",
+        )
+
+    except MasterInactiveError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Мастер сейчас не принимает записи!",
+        )
+
+    except OfferingNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Услуга не найдена!",
+        )
+
+    except OfferingInactiveError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Услуга сейчас недоступна!",
+        )
+
+    except OfferingDoesNotBelongToMasterError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Услуга не принадлежит выбранному мастеру!",
+        )
+
+    except MasterScheduleUnavailableError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Мастер не работает в выбранный день!",
+        )
+
+    except BookingInPastError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Нельзя получить слоты на прошедшую дату!",
         )
