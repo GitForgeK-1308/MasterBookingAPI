@@ -11,6 +11,7 @@ from src.database.base import Base
 if TYPE_CHECKING:
     from src.masters.models import Master
     from src.bookings.models import Booking
+    from src.categories.models import Category
 
 class MasterOffering(Base):
 
@@ -51,4 +52,17 @@ class MasterOffering(Base):
 
     bookings: Mapped[list["Booking"]] = relationship(
         back_populates="offering",
+    )
+
+    category_id: Mapped[uuid.UUID | None] = mapped_column(
+    ForeignKey(
+        "categories.id",
+        ondelete="RESTRICT",
+    ),
+    nullable=True,
+    index=True,
+    )
+
+    category: Mapped["Category | None"] = relationship(
+        back_populates="offerings",
     )
