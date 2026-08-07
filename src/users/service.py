@@ -1,8 +1,10 @@
 import uuid
 
-from src.auth.password import hash_password
+from src.auth.password import hash_password, verify_password
 from src.users.exceptions import (
     EmailAlreadyExistsError,
+    InactiveUserError,
+    InvalidCredentialsError,
     UserNotFoundError,
 )
 from src.users.models import User
@@ -58,3 +60,36 @@ class UserService:
         return await self.repository.create(
             new_user
         )
+
+
+    async def authenticate_user(
+        self,
+        email: str,
+        password: str,
+    ) -> User:
+        normalized_email = email.lower()
+
+        user = await self.repository.get_by_email(
+            normalized_email
+        )
+
+
+        if user is None:
+            raise InvalidCredentialsError
+
+
+        password_is_valid = verify_password(
+            plain_password=password,
+            hashed_password=user.hashed_password,
+        )
+        
+
+        if not password_is_valid:
+            raise InvalidCredentialsError
+
+        
+        if not user.is_active:
+            raise InactiveUserError
+
+
+        return user
