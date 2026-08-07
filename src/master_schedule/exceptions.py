@@ -4,3 +4,7 @@ class MasterNotFoundError(Exception):
 
 class ScheduleAlreadyExistsError(Exception):
     pass
+
+
+class ScheduleAccessDeniedError(Exception):
+    pass

@@ -3,6 +3,7 @@ import uuid
 from src.master_schedule.models import MasterSchedule
 from src.master_schedule.exceptions import (
     MasterNotFoundError,
+    ScheduleAccessDeniedError,
     ScheduleAlreadyExistsError,
 )
 
@@ -86,6 +87,7 @@ class MasterScheduleService:
     async def update_schedule(
     self,
     schedule_id: uuid.UUID,
+    master_id: uuid.UUID,
     data: MasterScheduleUpdate,
 ) -> MasterSchedule | None:
 
@@ -93,6 +95,9 @@ class MasterScheduleService:
 
         if schedule is None:
             return None
+
+        if schedule.master_id != master_id:
+            raise ScheduleAccessDeniedError
 
         data_dict = data.model_dump(exclude_unset=True)
 
@@ -136,6 +141,7 @@ class MasterScheduleService:
     async def delete_schedule(
         self,
         schedule_id: uuid.UUID,
+         master_id: uuid.UUID,
     ) -> bool | None:
         schedule = await self.schedule_repository.get_by_id(
             schedule_id
@@ -143,6 +149,9 @@ class MasterScheduleService:
 
         if schedule is None:
             return None
+
+        if schedule.master_id != master_id:
+            raise ScheduleAccessDeniedError
 
         await self.schedule_repository.delete(schedule)
 

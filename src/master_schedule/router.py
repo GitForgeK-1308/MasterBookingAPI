@@ -8,8 +8,10 @@ from fastapi import (
     status,
 )
 
+from src.auth.dependencies import get_current_master_profile
 from src.master_schedule.exceptions import (
     MasterNotFoundError,
+    ScheduleAccessDeniedError,
     ScheduleAlreadyExistsError,
 )
 
@@ -20,6 +22,7 @@ from src.master_schedule.schemas import (
     MasterScheduleUpdate,
 )
 from src.master_schedule.service import MasterScheduleService
+from src.masters.models import Master
 
 
 router = APIRouter(tags=["Master schedules"])
@@ -31,16 +34,18 @@ router = APIRouter(tags=["Master schedules"])
     status_code=status.HTTP_201_CREATED,
 )
 async def create_schedule(
-    master_id: uuid.UUID,
     data: MasterScheduleCreate,
+    current_master: Master = Depends(
+        get_current_master_profile
+    ),
     service: MasterScheduleService = Depends(
         get_schedule_service
     ),
 ):
     try:
         return await service.create_schedule(
-            master_id,
-            data,
+            master_id=current_master.id,
+            data=data,
         )
 
     except MasterNotFoundError:
@@ -114,6 +119,14 @@ async def update_schedule(
             schedule_id,
             data,
         )
+
+    except ScheduleAccessDeniedError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Вы не можете изменять чужое расписание!",
+        )
+
+
     except ValueError as error:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -126,7 +139,10 @@ async def update_schedule(
             detail="Расписание не найдено!",
         )
 
+
     return schedule
+
+    
 
 
 @router.delete(
@@ -139,16 +155,24 @@ async def delete_schedule(
         get_schedule_service
     ),
 ):
-    deleted = await service.delete_schedule(
-        schedule_id
-    )
 
-    if deleted is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Расписание не найдено!",
+    try: 
+        deleted = await service.delete_schedule(
+            schedule_id
         )
 
-    return Response(
-        status_code=status.HTTP_204_NO_CONTENT
-    )
+        if deleted is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Расписание не найдено!",
+            )
+
+        return Response(
+            status_code=status.HTTP_204_NO_CONTENT
+        )
+
+    except ScheduleAccessDeniedError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Вы не можете удалять чужое расписание!",
+        ) 
