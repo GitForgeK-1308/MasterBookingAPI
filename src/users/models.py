@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean,
@@ -9,10 +10,14 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from src.database.base import Base
+
+
+if TYPE_CHECKING:
+    from src.masters.models import Master
 
 
 class UserRole(str, Enum):
@@ -79,4 +84,10 @@ class User(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
+    )
+
+
+    master_profile: Mapped["Master | None"] = relationship(
+    back_populates="user",
+    uselist=False,
     )
