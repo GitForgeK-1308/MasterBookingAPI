@@ -90,3 +90,21 @@ class BookingRepository:
         )
 
         return list(result.all())
+
+
+    async def get_by_client_id(
+        self,
+        client_id: uuid.UUID,
+    ) -> list[Booking]:
+            result = await self.session.scalars(
+                select(Booking)
+                .where(
+                    Booking.client_id == client_id
+                )
+                .order_by(
+                    Booking.booking_date,
+                    Booking.start_time,
+                )
+            )
+
+            return list(result.all())

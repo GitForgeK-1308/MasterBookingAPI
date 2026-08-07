@@ -29,6 +29,10 @@ from src.bookings.schemas import (
 )
 from src.bookings.service import BookingService
 
+from src.auth.dependencies import get_current_client
+from src.users.models import User
+from src.bookings.exceptions import ClientPhoneRequiredError
+
 
 router = APIRouter(tags=["Bookings"])
 
@@ -41,6 +45,10 @@ router = APIRouter(tags=["Bookings"])
 async def create_booking(
     master_id: uuid.UUID,
     data: BookingCreate,
+    
+    current_user: User = Depends(
+        get_current_client
+    ),
     service: BookingService = Depends(
         get_booking_service
     ),
@@ -48,7 +56,14 @@ async def create_booking(
     try:
         return await service.create_booking(
             master_id=master_id,
+            current_user=current_user,
             data=data,
+        )
+
+    except ClientPhoneRequiredError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Для бронирования необходимо указать номер телефона!",
         )
 
     except MasterNotFoundError:
