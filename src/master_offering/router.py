@@ -131,13 +131,25 @@ async def patch_offering(
             raise HTTPException(status_code=404, detail="Услуга не найдена!")
 
         return offering_update
+        
+    except CategoryNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Категория не найдена!",
+        )
+
+    except CategoryInactiveError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Выбранная категория недоступна!",
+        )
 
     except OfferingAccessDeniedError:
          raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Вы не можете изменять чужую услугу!",
         )
-
+    
 
 @router.delete(
     "/offerings/{offering_id}",

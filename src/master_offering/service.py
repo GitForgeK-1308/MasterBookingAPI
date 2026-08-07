@@ -75,6 +75,17 @@ class MasterOfferingService:
 
         data_dict = data.model_dump(exclude_unset=True, exclude_none=True)
 
+        if "category_id" in data_dict:
+            category = await self.category_repository.get_by_id(
+                data_dict["category_id"]
+            )
+
+        if category is None:
+            raise CategoryNotFoundError
+
+        if not category.is_active:
+            raise CategoryInactiveError
+
         for key, value in data_dict.items():
             setattr(offering, key, value)
 
