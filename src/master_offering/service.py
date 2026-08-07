@@ -77,4 +77,12 @@ class MasterOfferingService:
 
         return True
 
+
+    async def get_master_offerings(
+    self,
+    master_id: uuid.UUID,
+    ) -> list[MasterOffering]:
+        return await self.repository.get_by_master_id(
+            master_id
+        )
     

@@ -38,6 +38,24 @@ async def create_offering(
     return offering
 
 
+@router.get(
+    "/masters/me/offerings",
+    response_model=list[MasterOfferingResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_my_offerings(
+    current_master: Master = Depends(
+        get_current_master_profile
+    ),
+    service: MasterOfferingService = Depends(
+        get_offering_service
+    ),
+):
+    return await service.get_master_offerings(
+        master_id=current_master.id
+    )
+
+
 
 @router.get(
     "/offerings/{offering_id}",
@@ -77,8 +95,9 @@ async def patch_offering(
 
     try:
         offering_update = await service.update_offering(
-            offering_id,
-            data,
+            offering_id=offering_id,
+             master_id=current_master.id,
+            data=data,
         )
 
 
@@ -100,10 +119,15 @@ async def patch_offering(
 
 async def delete_offering(
     offering_id: uuid.UUID,
+    current_master: Master = Depends(
+        get_current_master_profile),
     service: MasterOfferingService = Depends(get_offering_service)
 ):
     try: 
-        delete_offering = await service.delete_offering(offering_id)
+        delete_offering = await service.delete_offering(
+            offering_id=offering_id,
+            master_id=current_master.id,
+        )
 
         if delete_offering is None:
             raise HTTPException(

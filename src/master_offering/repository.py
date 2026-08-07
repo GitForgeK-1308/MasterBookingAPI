@@ -60,4 +60,16 @@ class MasterOfferingRepository:
 
         
        
-    
+    async def get_by_master_id(
+    self,
+    master_id: uuid.UUID,
+) -> list[MasterOffering]:
+        result = await self.session.scalars(
+            select(MasterOffering)
+            .where(
+                MasterOffering.master_id == master_id
+            )
+            .order_by(MasterOffering.title)
+        )
+
+        return list(result.all())
