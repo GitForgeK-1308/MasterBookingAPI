@@ -196,6 +196,18 @@ async def update_booking_status(
             detail="Бронирование не найдено!",
         )
 
+    except BookingAccessDeniedError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Вы не можете изменять чужое бронирование!",
+        )
+
+    except InvalidBookingStatusTransitionError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Недопустимое изменение статуса бронирования!",
+        )
+
 
 @router.get(
     "/masters/{master_id}/available-slots",
