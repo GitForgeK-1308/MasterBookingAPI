@@ -360,3 +360,12 @@ class BookingService:
             booking_date=booking_date,
             slots=available_slots,
         )
+
+
+    async def get_client_bookings(
+    self,
+    client_id: uuid.UUID,
+    ) -> list[Booking]:
+        return await self.booking_repository.get_by_client_id(
+            client_id
+        )

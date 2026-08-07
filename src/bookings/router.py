@@ -29,7 +29,7 @@ from src.bookings.schemas import (
 )
 from src.bookings.service import BookingService
 
-from src.auth.dependencies import get_current_client
+from src.auth.dependencies import get_current_client, get_current_user
 from src.users.models import User
 from src.bookings.exceptions import ClientPhoneRequiredError
 
@@ -255,3 +255,20 @@ async def get_available_slots(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Нельзя получить слоты на прошедшую дату!",
         )
+
+
+@router.get(
+    "/users/me/bookings",
+    response_model=list[BookingResponse],
+)
+async def get_my_bookings(
+    current_user: User = Depends(
+        get_current_user
+    ),
+    service: BookingService = Depends(
+        get_booking_service
+    ),
+):
+    return await service.get_client_bookings(
+        client_id=current_user.id
+    )
