@@ -1,13 +1,21 @@
 import uuid
 
+from src.masters.exceptions import MasterProfileAlreadyExistsError
 from src.masters.models import Master
 from src.masters.repository import MasterRepository
-from src.masters.schemas import MasterCreate, MasterUpdate
-
+from src.masters.schemas import MasterCreate, MasterProfileCreate, MasterUpdate
+from src.users.repository import UserRepository
+from src.users.models import User, UserRole
 
 class MasterService:
-    def __init__(self, repository: MasterRepository):
+    def __init__(
+        self, 
+        repository: MasterRepository,
+        user_repository: UserRepository,
+        ):
+
         self.repository = repository
+        self.user_repository = user_repository
 
 
 
@@ -70,3 +78,35 @@ class MasterService:
         return True
 
     
+    async def create_master_profile(
+    self,
+    current_user: User,
+    data: MasterProfileCreate,
+) -> Master:
+        existing_master = await self.repository.get_by_user_id(
+            current_user.id
+        )
+
+        if existing_master is not None:
+            raise MasterProfileAlreadyExistsError
+
+        master = Master(
+            user_id=current_user.id,
+            first_name=current_user.first_name,
+            last_name=current_user.last_name,
+            description=data.description,
+            experience=data.experience,
+            education=data.education,
+        )
+
+        created_master = await self.repository.create(
+            master
+        )
+
+        current_user.role = UserRole.MASTER
+
+        await self.user_repository.update(
+            current_user
+        )
+
+        return created_master
