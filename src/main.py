@@ -7,6 +7,7 @@ from src.master_schedule.router import router as schedules_router
 from src.bookings.router import router as bookings_router
 from src.users.router import router as users_router
 from src.users.profile_router import router as user_profile_router
+from src.categories.router import router as categories_router
 
 app = FastAPI(title="MasterBooking")
 
@@ -16,6 +17,7 @@ app.include_router(schedules_router)
 app.include_router(bookings_router)
 app.include_router(users_router)
 app.include_router(user_profile_router)
+app.include_router(categories_router)
 
 app.add_middleware(
     CORSMiddleware,
