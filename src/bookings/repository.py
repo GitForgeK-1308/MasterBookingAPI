@@ -30,7 +30,7 @@ class BookingRepository:
             select(Booking).where(
                 Booking.master_id == master_id,
                 Booking.booking_date == booking_date,
-            )
+            ).order_by(Booking.start_time)
         )
 
         return list(result.all())

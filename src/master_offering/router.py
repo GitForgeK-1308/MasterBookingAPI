@@ -55,7 +55,20 @@ async def get_my_offerings(
         master_id=current_master.id
     )
 
-
+@router.get(
+    "/masters/{master_id}/offerings",
+    response_model=list[MasterOfferingResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_master_offerings(
+    master_id: uuid.UUID,
+    service: MasterOfferingService = Depends(
+        get_offering_service
+    ),
+):
+    return await service.get_master_offerings(
+        master_id=master_id
+    )
 
 @router.get(
     "/offerings/{offering_id}",
@@ -124,12 +137,12 @@ async def delete_offering(
     service: MasterOfferingService = Depends(get_offering_service)
 ):
     try: 
-        delete_offering = await service.delete_offering(
+        deleted = await service.delete_offering(
             offering_id=offering_id,
             master_id=current_master.id,
         )
 
-        if delete_offering is None:
+        if not deleted:
             raise HTTPException(
                 status_code=404,
                 detail="Услуга не найдена!"

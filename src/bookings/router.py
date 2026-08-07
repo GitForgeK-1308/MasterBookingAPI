@@ -8,6 +8,11 @@ from fastapi import (
     status,
 )
 
+from src.auth.dependencies import (
+    get_current_client,
+    get_current_master_profile,
+    get_current_user,
+)
 from src.bookings.dependencies import get_booking_service
 from src.bookings.exceptions import (
     BookingAccessDeniedError,
@@ -15,6 +20,7 @@ from src.bookings.exceptions import (
     BookingNotFoundError,
     BookingOutsideWorkingHoursError,
     BookingTimeConflictError,
+    ClientPhoneRequiredError,
     InvalidBookingStatusTransitionError,
     MasterInactiveError,
     MasterNotFoundError,
@@ -24,17 +30,14 @@ from src.bookings.exceptions import (
     OfferingNotFoundError,
 )
 from src.bookings.schemas import (
+    AvailableSlotsResponse,
     BookingCreate,
     BookingResponse,
     BookingStatusUpdate,
-    AvailableSlotsResponse
 )
 from src.bookings.service import BookingService
-
-from src.auth.dependencies import get_current_client, get_current_master_profile, get_current_user
 from src.masters.models import Master
 from src.users.models import User
-from src.bookings.exceptions import ClientPhoneRequiredError
 
 
 router = APIRouter(tags=["Bookings"])
@@ -48,7 +51,6 @@ router = APIRouter(tags=["Bookings"])
 async def create_booking(
     master_id: uuid.UUID,
     data: BookingCreate,
-    
     current_user: User = Depends(
         get_current_client
     ),
@@ -125,19 +127,41 @@ async def create_booking(
 
 
 @router.get(
-    "/bookings/{booking_id}",
+    "/users/me/bookings",
+    response_model=list[BookingResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_my_bookings(
+    current_user: User = Depends(
+        get_current_user
+    ),
+    service: BookingService = Depends(
+        get_booking_service
+    ),
+):
+    return await service.get_client_bookings(
+        client_id=current_user.id
+    )
+
+
+@router.patch(
+    "/users/me/bookings/{booking_id}/cancel",
     response_model=BookingResponse,
     status_code=status.HTTP_200_OK,
 )
-async def get_booking_by_id(
+async def cancel_my_booking(
     booking_id: uuid.UUID,
+    current_user: User = Depends(
+        get_current_user
+    ),
     service: BookingService = Depends(
         get_booking_service
     ),
 ):
     try:
-        return await service.get_booking_by_id(
-            booking_id
+        return await service.cancel_client_booking(
+            booking_id=booking_id,
+            client_id=current_user.id,
         )
 
     except BookingNotFoundError:
@@ -146,22 +170,36 @@ async def get_booking_by_id(
             detail="Бронирование не найдено!",
         )
 
+    except BookingAccessDeniedError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Вы не можете отменить чужое бронирование!",
+        )
+
+    except InvalidBookingStatusTransitionError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Это бронирование нельзя отменить!",
+        )
+
 
 @router.get(
-    "/masters/{master_id}/bookings",
+    "/masters/me/bookings",
     response_model=list[BookingResponse],
     status_code=status.HTTP_200_OK,
 )
-async def get_master_bookings(
-    master_id: uuid.UUID,
+async def get_my_master_bookings(
     booking_date: date,
+    current_master: Master = Depends(
+        get_current_master_profile
+    ),
     service: BookingService = Depends(
         get_booking_service
     ),
 ):
     try:
         return await service.get_master_bookings(
-            master_id=master_id,
+            master_id=current_master.id,
             booking_date=booking_date,
         )
 
@@ -173,13 +211,16 @@ async def get_master_bookings(
 
 
 @router.patch(
-    "/bookings/{booking_id}/status",
+    "/masters/me/bookings/{booking_id}/status",
     response_model=BookingResponse,
     status_code=status.HTTP_200_OK,
 )
 async def update_booking_status(
     booking_id: uuid.UUID,
     data: BookingStatusUpdate,
+    current_master: Master = Depends(
+        get_current_master_profile
+    ),
     service: BookingService = Depends(
         get_booking_service
     ),
@@ -187,6 +228,7 @@ async def update_booking_status(
     try:
         return await service.update_booking_status(
             booking_id=booking_id,
+            master_id=current_master.id,
             data=data,
         )
 
@@ -206,6 +248,29 @@ async def update_booking_status(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Недопустимое изменение статуса бронирования!",
+        )
+
+
+@router.get(
+    "/bookings/{booking_id}",
+    response_model=BookingResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_booking_by_id(
+    booking_id: uuid.UUID,
+    service: BookingService = Depends(
+        get_booking_service
+    ),
+):
+    try:
+        return await service.get_booking_by_id(
+            booking_id
+        )
+
+    except BookingNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Бронирование не найдено!",
         )
 
 
@@ -269,78 +334,4 @@ async def get_available_slots(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Нельзя получить слоты на прошедшую дату!",
-        )
-
-
-@router.get(
-    "/users/me/bookings",
-    response_model=list[BookingResponse],
-)
-async def get_my_bookings(
-    current_user: User = Depends(
-        get_current_user
-    ),
-    service: BookingService = Depends(
-        get_booking_service
-    ),
-):
-    return await service.get_client_bookings(
-        client_id=current_user.id
-    )
-
-
-@router.get(
-    "/masters/me/bookings",
-    response_model=list[BookingResponse],
-)
-async def get_my_master_bookings(
-    booking_date: date,
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: BookingService = Depends(
-        get_booking_service
-    ),
-):
-    return await service.get_master_bookings(
-        master_id=current_master.id,
-        booking_date=booking_date,
-    )
-
-
-@router.patch(
-    "/users/me/bookings/{booking_id}/cancel",
-    response_model=BookingResponse,
-)
-async def cancel_my_booking(
-    booking_id: uuid.UUID,
-    current_user: User = Depends(
-        get_current_user
-    ),
-    service: BookingService = Depends(
-        get_booking_service
-    ),
-):
-    try:
-        return await service.cancel_client_booking(
-            booking_id=booking_id,
-            client_id=current_user.id,
-        )
-
-    except BookingNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Бронирование не найдено!",
-        )
-
-    except BookingAccessDeniedError:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Вы не можете отменить чужое бронирование!",
-        )
-
-    except InvalidBookingStatusTransitionError:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Это бронирование нельзя отменить!",
         )
