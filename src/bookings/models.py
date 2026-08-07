@@ -21,6 +21,7 @@ from src.database.base import Base
 if TYPE_CHECKING:
     from src.masters.models import Master
     from src.master_offering.models import MasterOffering
+    from src.users.models import User
 
 
 class BookingStatus(str, Enum):
@@ -61,6 +62,15 @@ class Booking(Base):
             ondelete="RESTRICT",
         ),
         nullable=False,
+        index=True,
+    )
+
+    client_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey(
+            "users.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
         index=True,
     )
 
@@ -118,4 +128,8 @@ class Booking(Base):
 
     offering: Mapped["MasterOffering"] = relationship(
         back_populates="bookings",
+    )
+
+    client: Mapped["User | None"] = relationship(
+    back_populates="bookings",
     )

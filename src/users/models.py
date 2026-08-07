@@ -18,7 +18,7 @@ from src.database.base import Base
 
 if TYPE_CHECKING:
     from src.masters.models import Master
-
+    from src.bookings.models import Booking
 
 class UserRole(str, Enum):
     CLIENT = "client"
@@ -90,4 +90,9 @@ class User(Base):
     master_profile: Mapped["Master | None"] = relationship(
     back_populates="user",
     uselist=False,
+    )
+
+
+    bookings: Mapped[list["Booking"]] = relationship(
+    back_populates="client",
     )
