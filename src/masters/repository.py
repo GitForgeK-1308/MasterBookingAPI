@@ -60,4 +60,12 @@ class MasterRepository:
 
         
        
-    
+    async def get_by_user_id(
+    self,
+    user_id: uuid.UUID,
+    ) -> Master | None:
+        return await self.session.scalar(
+            select(Master).where(
+                Master.user_id == user_id
+            )
+        )

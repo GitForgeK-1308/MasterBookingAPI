@@ -1,0 +1,2 @@
+class MasterProfileNotFoundError(Exception):
+    pass

@@ -2,11 +2,16 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 
+
 from src.auth.token import decode_access_token
+from src.database.session import get_async_session
+from src.masters.models import Master
+from src.masters.repository import MasterRepository
 from src.users.exceptions import UserNotFoundError
 from src.users.models import User, UserRole
 from src.users.service import UserService
 from src.users.dependencies import get_user_service
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 oauth2_scheme = OAuth2PasswordBearer(
@@ -83,3 +88,26 @@ async def get_current_admin(
         )
 
     return current_user
+
+
+async def get_current_master_profile(
+    current_user: User = Depends(
+        get_current_master_user
+    ),
+    session: AsyncSession = Depends(
+        get_async_session
+    ),
+) -> Master:
+    repository = MasterRepository(session)
+
+    master = await repository.get_by_user_id(
+        current_user.id
+    )
+
+    if master is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Профиль мастера не найден!",
+        )
+
+    return master
