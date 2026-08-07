@@ -1,7 +1,7 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, Text
+from sqlalchemy import String, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from src.master_offering.models import MasterOffering
     from src.master_schedule.models import MasterSchedule
     from src.bookings.models import Booking
+    from src.users.models import User
 
 class Master(Base):
     __tablename__ = "masters"
@@ -20,6 +21,14 @@ class Master(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
 
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey(
+            "users.id",
+            ondelete="SET NULL",
+        ),
+        unique=True,
+        nullable=True,
+    )
 
     first_name: Mapped[str] = mapped_column(String(20), nullable=False)
     last_name: Mapped[str] = mapped_column(String(25), nullable=False)
@@ -47,4 +56,9 @@ class Master(Base):
         back_populates="master",
         cascade="all, delete-orphan",
         passive_deletes=True,
+    )
+
+
+    user: Mapped["User | None"] = relationship(
+    back_populates="master_profile",
     )
