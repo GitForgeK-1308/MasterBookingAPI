@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from src.categories.models import Category
 from src.database.base import Base
 
 if TYPE_CHECKING:
     from src.masters.models import Master
     from src.bookings.models import Booking
-    from src.categories.models import Category
+
 
 class MasterOffering(Base):
 
@@ -29,7 +29,17 @@ class MasterOffering(Base):
         nullable=False,
         index=True,
     )
-        
+    
+
+    category_id: Mapped[uuid.UUID | None] = mapped_column(
+    ForeignKey(
+        "categories.id",
+        ondelete="RESTRICT",
+    ),
+            nullable=True,
+            index=True,
+        )
+
 
     title: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
