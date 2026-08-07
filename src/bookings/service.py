@@ -230,9 +230,11 @@ class BookingService:
         allowed_transitions = {
             BookingStatus.PENDING: {
                 BookingStatus.CONFIRMED,
+                BookingStatus.CANCELLED,
             },
             BookingStatus.CONFIRMED: {
                 BookingStatus.COMPLETED,
+                BookingStatus.CANCELLED,
             },
         }
 
