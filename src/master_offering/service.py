@@ -1,5 +1,6 @@
 import uuid
 
+from src.master_offering.exceptions import OfferingAccessDeniedError
 from src.master_offering.models import MasterOffering
 from src.master_offering.repository import MasterOfferingRepository
 from src.master_offering.schemas import MasterOfferingCreate, MasterOfferingUpdate
@@ -43,11 +44,15 @@ class MasterOfferingService:
         return await self.repository.create(new_offering)
     
     
-    async def update_offering(self, offering_id: uuid.UUID, data: MasterOfferingUpdate):
+    async def update_offering(self, offering_id: uuid.UUID, master_id: uuid.UUID, data: MasterOfferingUpdate):
         offering = await self.repository.get_by_id(offering_id)
 
         if not offering:
             return None
+
+
+        if offering.master_id != master_id:
+            raise OfferingAccessDeniedError
 
         data_dict = data.model_dump(exclude_unset=True, exclude_none=True)
 
@@ -59,11 +64,14 @@ class MasterOfferingService:
         return update_offering
 
     
-    async def delete_offering(self, offering_id: uuid.UUID):
+    async def delete_offering(self, offering_id: uuid.UUID, master_id: uuid.UUID):
         offering = await self.repository.get_by_id(offering_id)
 
         if offering is None:
             return None
+
+        if offering.master_id != master_id:
+            raise OfferingAccessDeniedError
 
         await self.repository.delete(offering)
 
