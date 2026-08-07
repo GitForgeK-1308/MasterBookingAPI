@@ -2,11 +2,13 @@ import uuid
 from datetime import datetime, timedelta, date, time
 
 from src.bookings.exceptions import (
+    BookingAccessDeniedError,
     BookingInPastError,
     BookingNotFoundError,
     BookingOutsideWorkingHoursError,
     BookingTimeConflictError,
     ClientPhoneRequiredError,
+    InvalidBookingStatusTransitionError,
     MasterInactiveError,
     MasterNotFoundError,
     MasterScheduleUnavailableError,
@@ -14,7 +16,7 @@ from src.bookings.exceptions import (
     OfferingInactiveError,
     OfferingNotFoundError,
 )
-from src.bookings.models import Booking
+from src.bookings.models import Booking, BookingStatus
 from src.bookings.repository import BookingRepository
 from src.bookings.schemas import (
     BookingCreate,
@@ -368,4 +370,32 @@ class BookingService:
     ) -> list[Booking]:
         return await self.booking_repository.get_by_client_id(
             client_id
+        )
+
+    
+    async def cancel_client_booking(
+    self,
+    booking_id: uuid.UUID,
+    client_id: uuid.UUID,
+    ) -> Booking:
+        booking = await self.booking_repository.get_by_id(
+            booking_id
+        )
+
+        if booking is None:
+            raise BookingNotFoundError
+
+        if booking.client_id != client_id:
+            raise BookingAccessDeniedError
+
+        if booking.status not in {
+            BookingStatus.PENDING,
+            BookingStatus.CONFIRMED,
+        }:
+            raise InvalidBookingStatusTransitionError
+
+        booking.status = BookingStatus.CANCELLED
+
+        return await self.booking_repository.update(
+            booking
         )

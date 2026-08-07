@@ -40,3 +40,11 @@ class BookingNotFoundError(Exception):
 
 class ClientPhoneRequiredError(Exception):
     pass
+
+
+class BookingAccessDeniedError(Exception):
+    pass
+
+
+class InvalidBookingStatusTransitionError(Exception):
+    pass
