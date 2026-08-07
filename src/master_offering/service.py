@@ -1,5 +1,7 @@
 import uuid
 
+from src.categories.exceptions import CategoryInactiveError, CategoryNotFoundError
+from src.categories.repository import CategoryRepository
 from src.master_offering.exceptions import OfferingAccessDeniedError
 from src.master_offering.models import MasterOffering
 from src.master_offering.repository import MasterOfferingRepository
@@ -7,9 +9,14 @@ from src.master_offering.schemas import MasterOfferingCreate, MasterOfferingUpda
 
 
 class MasterOfferingService:
-    def __init__(self, repository: MasterOfferingRepository):
+    def __init__(
+        self, 
+        repository: MasterOfferingRepository,
+        category_repository: CategoryRepository,
+        
+        ):
         self.repository = repository
-
+        self.category_repository = category_repository
 
 
     async def get_offering_by_id(
@@ -33,8 +40,20 @@ class MasterOfferingService:
 
 
     async def create_offering(self, master_id: uuid.UUID, data: MasterOfferingCreate):
+        category = await self.category_repository.get_by_id(
+        data.category_id
+    )
+
+        if category is None:
+            raise CategoryNotFoundError
+
+        if not category.is_active:
+            raise CategoryInactiveError
+
+
         new_offering= MasterOffering(
                 master_id=master_id,
+                category_id=data.category_id,
                 title=data.title,
                 description=data.description,
                 price=data.price,

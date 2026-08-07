@@ -12,7 +12,7 @@ class MasterOfferingBase(BaseModel):
 
 
 class MasterOfferingCreate(MasterOfferingBase):
-    pass
+    category_id: uuid.UUID
 
 
 
@@ -26,5 +26,6 @@ class MasterOfferingResponse(MasterOfferingBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
+    category_id: uuid.UUID | None
     master_id: uuid.UUID
     is_active: bool

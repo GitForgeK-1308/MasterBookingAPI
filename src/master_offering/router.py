@@ -2,6 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from src.categories.exceptions import CategoryInactiveError, CategoryNotFoundError
 from src.master_offering.dependencies import get_offering_service
 from src.master_offering.exceptions import OfferingAccessDeniedError
 from src.master_offering.schemas import (
@@ -30,12 +31,24 @@ async def create_offering(
     service: MasterOfferingService = Depends(get_offering_service)
     ):
     
-    offering = await service.create_offering(
-        master_id=current_master.id,
-        data=data
-    )
 
-    return offering
+    try:
+        return await service.create_offering(
+            master_id=current_master.id,
+            data=data,
+        )
+
+    except CategoryNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Категория не найдена!",
+        )
+
+    except CategoryInactiveError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Выбранная категория недоступна!",
+        )
 
 
 @router.get(

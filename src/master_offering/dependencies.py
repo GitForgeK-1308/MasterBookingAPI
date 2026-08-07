@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.session import get_async_session
 from src.master_offering.repository import MasterOfferingRepository
 from src.master_offering.service import MasterOfferingService
+from src.categories.repository import CategoryRepository
 
 
 def get_offering_service(
@@ -12,5 +13,11 @@ def get_offering_service(
 
     repository = MasterOfferingRepository(session)
 
+    category_repository = CategoryRepository(
+        session
+    )
 
-    return MasterOfferingService(repository)
+    return MasterOfferingService(
+        repository=repository,
+        category_repository=category_repository,
+    )

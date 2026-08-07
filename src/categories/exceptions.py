@@ -4,3 +4,7 @@ class CategoryNotFoundError(Exception):
 
 class CategoryAlreadyExistsError(Exception):
     pass
+
+
+class CategoryInactiveError(Exception):
+    pass
