@@ -6,6 +6,7 @@ from src.bookings.exceptions import (
     BookingNotFoundError,
     BookingOutsideWorkingHoursError,
     BookingTimeConflictError,
+    ClientPhoneRequiredError,
     MasterInactiveError,
     MasterNotFoundError,
     MasterScheduleUnavailableError,
@@ -28,6 +29,7 @@ from src.master_schedule.repository import (
     MasterScheduleRepository,
 )
 from src.masters.repository import MasterRepository
+from src.users.models import User
 
 
 WEEKDAY_BY_NUMBER = {
@@ -88,8 +90,13 @@ class BookingService:
     async def create_booking(
         self,
         master_id: uuid.UUID,
+        current_user: User,
         data: BookingCreate,
     ) -> Booking:
+
+        if current_user.phone is None:
+            raise ClientPhoneRequiredError
+
 
         master = await self.master_repository.get_by_id(
             master_id
@@ -187,14 +194,15 @@ class BookingService:
 
 
         new_booking = Booking(
+            client_id=current_user.id,
             master_id=master_id,
             offering_id=data.offering_id,
             booking_date=data.booking_date,
             start_time=data.start_time,
             end_time=end_time,
-            client_name=data.client_name,
-            client_phone=data.client_phone,
-            client_email=data.client_email,
+            client_name=f"{current_user.first_name} {current_user.last_name}",
+            client_phone=current_user.phone,
+            client_email=current_user.email,
         )
 
         return await self.booking_repository.create(
