@@ -6,6 +6,15 @@ from src.masters.dependencies import get_master_service
 from src.masters.schemas import MasterCreate, MasterResponse, MasterUpdate
 from src.masters.service import MasterService
 
+from src.auth.dependencies import get_current_user
+from src.masters.exceptions import MasterProfileAlreadyExistsError
+from src.masters.schemas import (
+    MasterProfileCreate,
+    MasterResponse,
+)
+from src.users.models import User
+
+
 router = APIRouter(prefix="/masters", tags=["Masters"])
 
 
@@ -84,4 +93,27 @@ async def master_delete(
         raise HTTPException(
             status_code=404,
             detail="Мастер не найден!"
+        )
+
+
+@router.post(
+    "/profile",
+    response_model=MasterResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_master_profile(
+    data: MasterProfileCreate,
+    current_user: User = Depends(get_current_user),
+    service: MasterService = Depends(get_master_service),
+):
+    try:
+        return await service.create_master_profile(
+            current_user=current_user,
+            data=data,
+        )
+
+    except MasterProfileAlreadyExistsError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Профиль мастера уже существует!",
         )
