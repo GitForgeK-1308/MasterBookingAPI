@@ -10,10 +10,12 @@ from fastapi import (
 
 from src.bookings.dependencies import get_booking_service
 from src.bookings.exceptions import (
+    BookingAccessDeniedError,
     BookingInPastError,
     BookingNotFoundError,
     BookingOutsideWorkingHoursError,
     BookingTimeConflictError,
+    InvalidBookingStatusTransitionError,
     MasterInactiveError,
     MasterNotFoundError,
     MasterScheduleUnavailableError,
@@ -292,3 +294,41 @@ async def get_my_master_bookings(
         master_id=current_master.id,
         booking_date=booking_date,
     )
+
+
+@router.patch(
+    "/users/me/bookings/{booking_id}/cancel",
+    response_model=BookingResponse,
+)
+async def cancel_my_booking(
+    booking_id: uuid.UUID,
+    current_user: User = Depends(
+        get_current_user
+    ),
+    service: BookingService = Depends(
+        get_booking_service
+    ),
+):
+    try:
+        return await service.cancel_client_booking(
+            booking_id=booking_id,
+            client_id=current_user.id,
+        )
+
+    except BookingNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Бронирование не найдено!",
+        )
+
+    except BookingAccessDeniedError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Вы не можете отменить чужое бронирование!",
+        )
+
+    except InvalidBookingStatusTransitionError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Это бронирование нельзя отменить!",
+        )
