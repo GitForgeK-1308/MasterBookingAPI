@@ -4,7 +4,7 @@ from jwt.exceptions import InvalidTokenError
 
 from src.auth.token import decode_access_token
 from src.users.exceptions import UserNotFoundError
-from src.users.models import User
+from src.users.models import User, UserRole
 from src.users.service import UserService
 from src.users.dependencies import get_user_service
 
@@ -47,3 +47,39 @@ async def get_current_user(
         )
 
     return user
+
+
+async def get_current_client(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if current_user.role != UserRole.CLIENT:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Доступ разрешён только клиентам!",
+        )
+
+    return current_user
+
+
+async def get_current_master_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if current_user.role != UserRole.MASTER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Доступ разрешён только мастерам!",
+        )
+
+    return current_user
+
+
+async def get_current_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Доступ разрешён только администраторам!",
+        )
+
+    return current_user
