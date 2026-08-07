@@ -212,10 +212,11 @@ class BookingService:
         )
 
     async def update_booking_status(
-        self,
-        booking_id: uuid.UUID,
-        data: BookingStatusUpdate,
-    ) -> Booking:
+    self,
+    booking_id: uuid.UUID,
+    master_id: uuid.UUID,
+    data: BookingStatusUpdate,
+) -> Booking:
         booking = await self.booking_repository.get_by_id(
             booking_id
         )
@@ -223,12 +224,31 @@ class BookingService:
         if booking is None:
             raise BookingNotFoundError
 
+        if booking.master_id != master_id:
+            raise BookingAccessDeniedError
+
+        allowed_transitions = {
+            BookingStatus.PENDING: {
+                BookingStatus.CONFIRMED,
+            },
+            BookingStatus.CONFIRMED: {
+                BookingStatus.COMPLETED,
+            },
+        }
+
+        allowed_statuses = allowed_transitions.get(
+            booking.status,
+            set(),
+        )
+
+        if data.status not in allowed_statuses:
+            raise InvalidBookingStatusTransitionError
+
         booking.status = data.status
 
         return await self.booking_repository.update(
             booking
         )
-
 
         
 
@@ -399,3 +419,6 @@ class BookingService:
         return await self.booking_repository.update(
             booking
         )
+
+
+    
