@@ -9,10 +9,6 @@ class BookingCreate(BaseModel):
     offering_id: uuid.UUID
     booking_date: date
     start_time: time
-    client_name: str
-    client_phone: str
-    client_email: str | None = None
-
 
 
 class BookingStatusUpdate(BaseModel):
@@ -24,6 +20,8 @@ class BookingResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
     id: uuid.UUID
+    client_id: uuid.UUID | None
+    
     master_id: uuid.UUID
     offering_id: uuid.UUID
 

@@ -176,3 +176,6 @@ async def delete_schedule(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Вы не можете удалять чужое расписание!",
         ) 
+
+    
+    

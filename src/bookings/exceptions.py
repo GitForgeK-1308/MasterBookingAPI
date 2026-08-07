@@ -36,3 +36,7 @@ class BookingTimeConflictError(Exception):
 
 class BookingNotFoundError(Exception):
     pass
+
+
+class ClientPhoneRequiredError(Exception):
+    pass
