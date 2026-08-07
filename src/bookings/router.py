@@ -29,7 +29,8 @@ from src.bookings.schemas import (
 )
 from src.bookings.service import BookingService
 
-from src.auth.dependencies import get_current_client, get_current_user
+from src.auth.dependencies import get_current_client, get_current_master_profile, get_current_user
+from src.masters.models import Master
 from src.users.models import User
 from src.bookings.exceptions import ClientPhoneRequiredError
 
@@ -271,4 +272,23 @@ async def get_my_bookings(
 ):
     return await service.get_client_bookings(
         client_id=current_user.id
+    )
+
+
+@router.get(
+    "/masters/me/bookings",
+    response_model=list[BookingResponse],
+)
+async def get_my_master_bookings(
+    booking_date: date,
+    current_master: Master = Depends(
+        get_current_master_profile
+    ),
+    service: BookingService = Depends(
+        get_booking_service
+    ),
+):
+    return await service.get_master_bookings(
+        master_id=current_master.id,
+        booking_date=booking_date,
     )
