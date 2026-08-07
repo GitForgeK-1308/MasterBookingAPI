@@ -34,3 +34,17 @@ class MasterResponse(MasterBase):
 
     id: uuid.UUID
     is_active: bool
+
+
+class MasterProfileCreate(BaseModel):
+    description: str = Field(
+        min_length=10,
+        max_length=2000,
+    )
+    experience: int = Field(
+        ge=0,
+    )
+    education: str = Field(
+        min_length=2,
+        max_length=1000,
+    )
