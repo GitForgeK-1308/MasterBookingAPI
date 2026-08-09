@@ -17,9 +17,10 @@ class MasterOfferingCreate(MasterOfferingBase):
 
 
 class MasterOfferingUpdate(BaseModel):
+    category_id: uuid.UUID | None = None
     title: str | None = None
     description: str | None = None
-    price: int | None = None
+    price: Decimal | None = None
     duration_minutes: int | None = None
 
 class MasterOfferingResponse(MasterOfferingBase):

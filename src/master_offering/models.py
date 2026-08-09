@@ -64,15 +64,6 @@ class MasterOffering(Base):
         back_populates="offering",
     )
 
-    category_id: Mapped[uuid.UUID | None] = mapped_column(
-    ForeignKey(
-        "categories.id",
-        ondelete="RESTRICT",
-    ),
-    nullable=True,
-    index=True,
-    )
-
     category: Mapped["Category | None"] = relationship(
         back_populates="offerings",
     )

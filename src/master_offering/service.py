@@ -63,35 +63,48 @@ class MasterOfferingService:
         return await self.repository.create(new_offering)
     
     
-    async def update_offering(self, offering_id: uuid.UUID, master_id: uuid.UUID, data: MasterOfferingUpdate):
-        offering = await self.repository.get_by_id(offering_id)
+    async def update_offering(
+    self,
+    offering_id: uuid.UUID,
+    master_id: uuid.UUID,
+    data: MasterOfferingUpdate,
+):
+        offering = await self.repository.get_by_id(
+            offering_id
+        )
 
-        if not offering:
+        if offering is None:
             return None
-
 
         if offering.master_id != master_id:
             raise OfferingAccessDeniedError
 
-        data_dict = data.model_dump(exclude_unset=True, exclude_none=True)
+        data_dict = data.model_dump(
+            exclude_unset=True,
+            exclude_none=True,
+        )
 
         if "category_id" in data_dict:
             category = await self.category_repository.get_by_id(
                 data_dict["category_id"]
             )
 
-        if category is None:
-            raise CategoryNotFoundError
+            if category is None:
+                raise CategoryNotFoundError
 
-        if not category.is_active:
-            raise CategoryInactiveError
+            if not category.is_active:
+                raise CategoryInactiveError
 
         for key, value in data_dict.items():
-            setattr(offering, key, value)
+            setattr(
+                offering,
+                key,
+                value,
+            )
 
-        update_offering = await self.repository.update(offering)
-
-        return update_offering
+        return await self.repository.update(
+            offering
+        )
 
     
     async def delete_offering(self, offering_id: uuid.UUID, master_id: uuid.UUID):
