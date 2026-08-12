@@ -7,6 +7,7 @@ from fastapi import (
     status,
 )
 
+from src.auth.dependencies import get_current_user
 from src.auth.token import create_access_token
 from src.users.dependencies import get_user_service
 from src.users.exceptions import (
@@ -15,7 +16,8 @@ from src.users.exceptions import (
     InvalidCredentialsError,
 )
 
-from src.users.schemas import UserRegister, UserResponse, TokenResponse
+from src.users.models import User
+from src.users.schemas import UserProfileUpdate, UserRegister, UserResponse, TokenResponse
 from src.users.service import UserService
 
 
@@ -81,3 +83,23 @@ async def login_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Аккаунт пользователя отключён!",
         )
+
+
+@router.patch(
+    "/users/me",
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def update_my_profile(
+    data: UserProfileUpdate,
+    current_user: User = Depends(
+        get_current_user
+    ),
+    service: UserService = Depends(
+        get_user_service
+    ),
+):
+    return await service.update_profile(
+        user=current_user,
+        data=data,
+    )

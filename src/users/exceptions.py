@@ -20,3 +20,11 @@ class InvalidCredentialsError(Exception):
 
 class InactiveUserError(Exception):
     pass
+
+
+class InvalidAvatarTypeError(Exception):
+    pass
+
+
+class AvatarTooLargeError(Exception):
+    pass

@@ -1,15 +1,31 @@
+from io import BytesIO
+from PIL import Image, UnidentifiedImageError
 import uuid
+
+from fastapi import UploadFile
 
 from src.auth.password import hash_password, verify_password
 from src.users.exceptions import (
+    AvatarTooLargeError,
     EmailAlreadyExistsError,
     InactiveUserError,
+    InvalidAvatarTypeError,
     InvalidCredentialsError,
     UserNotFoundError,
 )
 from src.users.models import User
 from src.users.repository import UserRepository
 from src.users.schemas import UserProfileUpdate, UserRegister
+
+
+MAX_AVATAR_SIZE = 5 * 1024 * 1024
+
+
+ALLOWED_AVATAR_FORMATS = {
+    "JPEG": "jpg",
+    "PNG": "png",
+    "WEBP": "webp",
+}
 
 
 class UserService:
@@ -114,3 +130,67 @@ class UserService:
         return await self.repository.update(
             user
         )
+
+
+   
+    async def upload_avatar(
+        self,
+        user: User,
+        file: UploadFile,
+    ) -> User:
+        content = await file.read(
+            MAX_AVATAR_SIZE + 1
+        )
+
+        if len(content) > MAX_AVATAR_SIZE:
+            raise AvatarTooLargeError
+
+        try:
+            image = Image.open(
+                BytesIO(content)
+            )
+
+            image_format = image.format
+
+            image.verify()
+
+        except (
+            UnidentifiedImageError,
+            OSError,
+            Image.DecompressionBombError,
+        ):
+            raise InvalidAvatarTypeError
+
+        if image_format not in ALLOWED_AVATAR_FORMATS:
+            raise InvalidAvatarTypeError
+
+        extension = ALLOWED_AVATAR_FORMATS[
+            image_format
+        ]
+
+        old_avatar = user.avatar_storage_key
+
+        new_storage_key = await self.storage.save(
+            content=content,
+            extension=extension,
+        )
+
+        try:
+            user.avatar_storage_key = new_storage_key
+
+            updated_user = await self.repository.update(
+                user
+            )
+
+        except Exception:
+            await self.storage.delete(
+                new_storage_key
+            )
+            raise
+
+        if old_avatar is not None:
+            await self.storage.delete(
+                old_avatar
+            )
+
+        return updated_user
