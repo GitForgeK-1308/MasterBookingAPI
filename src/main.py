@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from src.master_offering.router import router as service_router
 from src.masters.router import router as masters_router
@@ -10,6 +11,14 @@ from src.users.profile_router import router as user_profile_router
 from src.categories.router import router as categories_router
 
 app = FastAPI(title="MasterBooking")
+
+
+app.mount(
+    "/uploads",
+    StaticFiles(directory="uploads"),
+    name="uploads",
+)
+
 
 app.include_router(masters_router)
 app.include_router(service_router)
@@ -26,3 +35,5 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
