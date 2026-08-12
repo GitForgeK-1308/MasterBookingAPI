@@ -175,3 +175,43 @@ async def set_primary_image(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Вы не можете изменять фотографии чужой услуги!",
         )
+
+
+@router.delete(
+    "/{offering_id}/images/{image_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_offering_image(
+    offering_id: uuid.UUID,
+    image_id: uuid.UUID,
+    current_master: Master = Depends(
+        get_current_master_profile
+    ),
+    service: OfferingImageService = Depends(
+        get_offering_image_service
+    ),
+):
+    try:
+        await service.delete_image(
+            offering_id=offering_id,
+            image_id=image_id,
+            master_id=current_master.id,
+        )
+
+    except OfferingNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Услуга не найдена!",
+        )
+
+    except OfferingImageNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Фотография не найдена!",
+        )
+
+    except OfferingImageAccessDeniedError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Вы не можете удалять фотографии чужой услуги!",
+        )

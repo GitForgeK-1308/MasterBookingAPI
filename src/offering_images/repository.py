@@ -130,3 +130,33 @@ class OfferingImageRepository:
         await self.session.refresh(image)
 
         return image
+
+
+    async def delete_with_primary_fallback(
+    self,
+    image: OfferingImage,
+) -> None:
+        was_primary = image.is_primary
+        offering_id = image.offering_id
+
+        await self.session.delete(image)
+
+        await self.session.flush()
+
+        if was_primary:
+            next_image = await self.session.scalar(
+                select(OfferingImage)
+                .where(
+                    OfferingImage.offering_id == offering_id
+                )
+                .order_by(
+                    OfferingImage.sort_order.asc(),
+                    OfferingImage.created_at.asc(),
+                )
+                .limit(1)
+            )
+
+            if next_image is not None:
+                next_image.is_primary = True
+
+        await self.session.commit()

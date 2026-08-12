@@ -176,3 +176,40 @@ class OfferingImageService:
             raise OfferingImageNotFoundError
 
         return updated_image
+
+
+    async def delete_image(
+    self,
+    offering_id: uuid.UUID,
+    image_id: uuid.UUID,
+    master_id: uuid.UUID,
+) -> None:
+        offering = await self.offering_repository.get_by_id(
+            offering_id
+        )
+
+        if offering is None:
+            raise OfferingNotFoundError
+
+        if offering.master_id != master_id:
+            raise OfferingImageAccessDeniedError
+
+        image = await self.repository.get_by_id(
+            image_id
+        )
+
+        if image is None:
+            raise OfferingImageNotFoundError
+
+        if image.offering_id != offering_id:
+            raise OfferingImageNotFoundError
+
+        storage_key = image.storage_key
+
+        await self.repository.delete_with_primary_fallback(
+            image
+        )
+
+        await self.storage.delete(
+            storage_key
+        )
