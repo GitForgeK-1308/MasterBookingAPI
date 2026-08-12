@@ -84,3 +84,41 @@ async def upload_offering_image(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail="Разрешены только JPEG, PNG и WEBP изображения!",
         )
+
+
+
+@router.get(
+    "/{offering_id}/images",
+    response_model=list[OfferingImageResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_offering_images(
+    offering_id: uuid.UUID,
+    service: OfferingImageService = Depends(
+        get_offering_image_service
+    ),
+):
+    try:
+        images = await service.get_offering_images(
+            offering_id=offering_id
+        )
+
+        return [
+            OfferingImageResponse(
+                id=image.id,
+                offering_id=image.offering_id,
+                image_url=service.get_image_url(
+                    image.storage_key
+                ),
+                is_primary=image.is_primary,
+                sort_order=image.sort_order,
+                created_at=image.created_at,
+            )
+            for image in images
+        ]
+
+    except OfferingNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Услуга не найдена!",
+        )

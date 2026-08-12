@@ -121,3 +121,20 @@ class OfferingImageService:
                 storage_key
             )
             raise
+
+
+    async def get_offering_images(
+    self,
+    offering_id: uuid.UUID,
+) -> list[OfferingImage]:
+
+        offering = await self.offering_repository.get_by_id(
+            offering_id
+        )
+
+        if offering is None:
+            raise OfferingNotFoundError
+
+        return await self.repository.get_by_offering_id(
+            offering_id
+        )
