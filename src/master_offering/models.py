@@ -6,11 +6,13 @@ from sqlalchemy import ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.categories.models import Category
+from src.offering_images.models import OfferingImage
 from src.database.base import Base
 
 if TYPE_CHECKING:
     from src.masters.models import Master
     from src.bookings.models import Booking
+
 
 
 class MasterOffering(Base):
@@ -66,4 +68,10 @@ class MasterOffering(Base):
 
     category: Mapped["Category | None"] = relationship(
         back_populates="offerings",
+    )
+
+    images: Mapped[list["OfferingImage"]] = relationship(
+    back_populates="offering",
+    cascade="all, delete-orphan",
+    passive_deletes=True,
     )

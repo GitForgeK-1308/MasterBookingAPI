@@ -5,6 +5,9 @@ from src.master_schedule.models import MasterSchedule
 from src.bookings.models import Booking
 from src.users.models import User
 from src.categories.models import Category
+from src.offering_images.models import OfferingImage
+
+
 __all__ = [
     "Base",
     "Master",
@@ -13,4 +16,8 @@ __all__ = [
     "Booking",
     "User",
     "Category",
+    "OfferingImage",
+
+
+    
 ]
