@@ -40,6 +40,14 @@ class OfferingImageService:
         self.offering_repository = offering_repository
         self.storage = storage
 
+
+    def get_image_url(
+        self,
+        storage_key: str,
+    ) -> str:
+        return self.storage.get_url(storage_key)
+
+
     async def upload_image(
         self,
         offering_id: uuid.UUID,
