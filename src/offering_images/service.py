@@ -9,6 +9,7 @@ from src.offering_images.exceptions import (
     InvalidOfferingImageTypeError,
     OfferingImageAccessDeniedError,
     OfferingImageLimitExceededError,
+    OfferingImageNotFoundError,
     OfferingImageTooLargeError,
     OfferingNotFoundError
 )
@@ -138,3 +139,40 @@ class OfferingImageService:
         return await self.repository.get_by_offering_id(
             offering_id
         )
+
+
+    async def set_primary_image(
+    self,
+    offering_id: uuid.UUID,
+    image_id: uuid.UUID,
+    master_id: uuid.UUID,
+) -> OfferingImage:
+        offering = await self.offering_repository.get_by_id(
+            offering_id
+        )
+
+        if offering is None:
+            raise OfferingNotFoundError
+
+        if offering.master_id != master_id:
+            raise OfferingImageAccessDeniedError
+
+        image = await self.repository.get_by_id(
+            image_id
+        )
+
+        if image is None:
+            raise OfferingImageNotFoundError
+
+        if image.offering_id != offering_id:
+            raise OfferingImageNotFoundError
+
+        updated_image = await self.repository.set_primary(
+            offering_id=offering_id,
+            image_id=image_id,
+        )
+
+        if updated_image is None:
+            raise OfferingImageNotFoundError
+
+        return updated_image

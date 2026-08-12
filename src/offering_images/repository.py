@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.offering_images.models import OfferingImage
+from sqlalchemy import func, select, update
 
 
 class OfferingImageRepository:
@@ -87,3 +88,45 @@ class OfferingImageRepository:
     ) -> None:
         await self.session.delete(image)
         await self.session.commit()
+
+
+
+    async def set_primary(
+    self,
+    offering_id: uuid.UUID,
+    image_id: uuid.UUID,
+) -> OfferingImage | None:
+
+        image = await self.get_by_id(image_id)
+
+        if image is None:
+            return None
+
+        if image.offering_id != offering_id:
+            return None
+
+        await self.session.execute(
+            update(OfferingImage)
+            .where(
+                OfferingImage.offering_id == offering_id,
+                OfferingImage.is_primary.is_(True),
+            )
+            .values(
+                is_primary=False
+            )
+        )
+
+        await self.session.execute(
+            update(OfferingImage)
+            .where(
+                OfferingImage.id == image_id
+            )
+            .values(
+                is_primary=True
+            )
+        )
+
+        await self.session.commit()
+        await self.session.refresh(image)
+
+        return image

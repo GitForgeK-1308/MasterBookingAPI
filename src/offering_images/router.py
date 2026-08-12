@@ -10,6 +10,7 @@ from src.offering_images.exceptions import (
     InvalidOfferingImageTypeError,
     OfferingImageAccessDeniedError,
     OfferingImageLimitExceededError,
+    OfferingImageNotFoundError,
     OfferingImageTooLargeError,
 )
 from src.offering_images.schemas import OfferingImageResponse
@@ -121,4 +122,56 @@ async def get_offering_images(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Услуга не найдена!",
+        )
+
+
+@router.patch(
+    "/{offering_id}/images/{image_id}/primary",
+    response_model=OfferingImageResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def set_primary_image(
+    offering_id: uuid.UUID,
+    image_id: uuid.UUID,
+    current_master: Master = Depends(
+        get_current_master_profile
+    ),
+    service: OfferingImageService = Depends(
+        get_offering_image_service
+    ),
+):
+    try:
+        image = await service.set_primary_image(
+            offering_id=offering_id,
+            image_id=image_id,
+            master_id=current_master.id,
+        )
+
+        return OfferingImageResponse(
+            id=image.id,
+            offering_id=image.offering_id,
+            image_url=service.get_image_url(
+                image.storage_key
+            ),
+            is_primary=image.is_primary,
+            sort_order=image.sort_order,
+            created_at=image.created_at,
+        )
+
+    except OfferingNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Услуга не найдена!",
+        )
+
+    except OfferingImageNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Фотография не найдена!",
+        )
+
+    except OfferingImageAccessDeniedError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Вы не можете изменять фотографии чужой услуги!",
         )
