@@ -4,7 +4,7 @@ import uuid
 
 from src.categories.exceptions import CategoryInactiveError, CategoryNotFoundError
 from src.categories.repository import CategoryRepository
-from src.master_offering.exceptions import OfferingAccessDeniedError
+from src.master_offering.exceptions import OfferingAccessDeniedError, OfferingNotFoundError
 from src.master_offering.models import MasterOffering
 from src.master_offering.repository import MasterOfferingRepository
 from src.master_offering.schemas import MasterOfferingCreate, MasterOfferingPage, MasterOfferingUpdate, OfferingSort

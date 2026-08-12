@@ -1,3 +1,4 @@
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -10,6 +11,17 @@ from src.users.router import router as users_router
 from src.users.profile_router import router as user_profile_router
 from src.categories.router import router as categories_router
 from src.offering_images.router import router as offering_images_router
+
+
+UPLOADS_DIR = Path("uploads")
+OFFERINGS_DIR = UPLOADS_DIR / "offerings"
+
+OFFERINGS_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+
 
 app = FastAPI(title="MasterBooking")
 
