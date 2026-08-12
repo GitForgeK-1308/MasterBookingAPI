@@ -1,3 +1,4 @@
+from decimal import Decimal
 import uuid
 
 from src.categories.exceptions import CategoryInactiveError, CategoryNotFoundError
@@ -5,7 +6,7 @@ from src.categories.repository import CategoryRepository
 from src.master_offering.exceptions import OfferingAccessDeniedError
 from src.master_offering.models import MasterOffering
 from src.master_offering.repository import MasterOfferingRepository
-from src.master_offering.schemas import MasterOfferingCreate, MasterOfferingUpdate
+from src.master_offering.schemas import MasterOfferingCreate, MasterOfferingUpdate, OfferingSort
 
 
 class MasterOfferingService:
@@ -129,3 +130,18 @@ class MasterOfferingService:
             master_id
         )
     
+
+    async def get_public_offerings(
+    self,
+    category_id: uuid.UUID | None = None,
+    min_price: Decimal | None = None,
+    max_price: Decimal | None = None,
+    sort: OfferingSort | None = None,
+) -> list[MasterOffering]:
+
+        return await self.repository.get_public_offerings(
+            category_id=category_id,
+            min_price=min_price,
+            max_price=max_price,
+            sort=sort,
+        )
