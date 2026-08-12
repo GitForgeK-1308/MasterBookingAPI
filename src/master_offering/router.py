@@ -1,5 +1,7 @@
 import uuid
 
+from decimal import Decimal
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.categories.exceptions import CategoryInactiveError, CategoryNotFoundError
@@ -9,6 +11,7 @@ from src.master_offering.schemas import (
     MasterOfferingCreate,
     MasterOfferingResponse,
     MasterOfferingUpdate,
+    OfferingSort,
 )
 from src.master_offering.service import MasterOfferingService
 
@@ -81,6 +84,28 @@ async def get_master_offerings(
 ):
     return await service.get_master_offerings(
         master_id=master_id
+    )
+
+
+@router.get(
+    "/offerings",
+    response_model=list[MasterOfferingResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_public_offerings(
+    category_id: uuid.UUID | None = None,
+    min_price: Decimal | None = None,
+    max_price: Decimal | None = None,
+    sort: OfferingSort | None = None,
+    service: MasterOfferingService = Depends(
+        get_offering_service
+    ),
+):
+    return await service.get_public_offerings(
+        category_id=category_id,
+        min_price=min_price,
+        max_price=max_price,
+        sort=sort,
     )
 
 @router.get(

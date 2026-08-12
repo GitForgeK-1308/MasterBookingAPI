@@ -3,6 +3,10 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy import and_, func, select
+
+from src.bookings.models import Booking, BookingStatus
+
 from src.master_offering.models import MasterOffering
 from src.master_offering.schemas import OfferingSort
 
@@ -113,9 +117,26 @@ class MasterOfferingRepository:
                 MasterOffering.price.desc()
             )
 
+        elif sort == OfferingSort.POPULAR:
+            query = (
+                query
+                .outerjoin(
+                    Booking,
+                    and_(
+                        Booking.offering_id == MasterOffering.id,
+                        Booking.status != BookingStatus.CANCELLED,
+                    ),
+                )
+                .group_by(MasterOffering.id)
+                .order_by(
+                    func.count(Booking.id).desc(),
+                    MasterOffering.title.asc(),
+                )
+            )
+
         else:
             query = query.order_by(
-                MasterOffering.title
+                MasterOffering.title.asc()
             )
 
         result = await self.session.scalars(query)
