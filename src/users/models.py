@@ -96,3 +96,9 @@ class User(Base):
     bookings: Mapped[list["Booking"]] = relationship(
     back_populates="client",
     )
+
+
+    avatar_storage_key: Mapped[str | None] = mapped_column(
+    String(255),
+    nullable=True,
+)
