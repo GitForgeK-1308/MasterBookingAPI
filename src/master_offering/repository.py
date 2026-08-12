@@ -86,9 +86,17 @@ class MasterOfferingRepository:
     min_price: Decimal | None = None,
     max_price: Decimal | None = None,
     sort: OfferingSort | None = None,
-) -> list[MasterOffering]:
+    offset: int = 0,
+    limit: int = 12,
+) -> tuple[list[MasterOffering], int]:
 
         query = select(MasterOffering).where(
+            MasterOffering.is_active.is_(True)
+        )
+
+        count_query = select(
+            func.count(MasterOffering.id)
+        ).where(
             MasterOffering.is_active.is_(True)
         )
 
@@ -97,13 +105,25 @@ class MasterOfferingRepository:
                 MasterOffering.category_id == category_id
             )
 
+            count_query = count_query.where(
+                MasterOffering.category_id == category_id
+            )
+
         if min_price is not None:
             query = query.where(
                 MasterOffering.price >= min_price
             )
 
+            count_query = count_query.where(
+                MasterOffering.price >= min_price
+            )
+
         if max_price is not None:
             query = query.where(
+                MasterOffering.price <= max_price
+            )
+
+            count_query = count_query.where(
                 MasterOffering.price <= max_price
             )
 
@@ -139,6 +159,18 @@ class MasterOfferingRepository:
                 MasterOffering.title.asc()
             )
 
-        result = await self.session.scalars(query)
+        total = await self.session.scalar(
+            count_query
+        )
 
-        return list(result.all())
+        query = query.offset(
+            offset
+        ).limit(
+            limit
+        )
+
+        result = await self.session.scalars(
+            query
+        )
+
+        return list(result.all()), total or 0

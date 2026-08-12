@@ -1,4 +1,5 @@
 from decimal import Decimal
+import math
 import uuid
 
 from src.categories.exceptions import CategoryInactiveError, CategoryNotFoundError
@@ -6,7 +7,7 @@ from src.categories.repository import CategoryRepository
 from src.master_offering.exceptions import OfferingAccessDeniedError
 from src.master_offering.models import MasterOffering
 from src.master_offering.repository import MasterOfferingRepository
-from src.master_offering.schemas import MasterOfferingCreate, MasterOfferingUpdate, OfferingSort
+from src.master_offering.schemas import MasterOfferingCreate, MasterOfferingPage, MasterOfferingUpdate, OfferingSort
 
 
 class MasterOfferingService:
@@ -137,11 +138,29 @@ class MasterOfferingService:
     min_price: Decimal | None = None,
     max_price: Decimal | None = None,
     sort: OfferingSort | None = None,
-) -> list[MasterOffering]:
+    page: int = 1,
+    page_size: int = 12,
+) -> MasterOfferingPage:
 
-        return await self.repository.get_public_offerings(
+        offset = (page - 1) * page_size
+
+        offerings, total = await self.repository.get_public_offerings(
             category_id=category_id,
             min_price=min_price,
             max_price=max_price,
             sort=sort,
+            offset=offset,
+            limit=page_size,
+        )
+
+        total_pages = math.ceil(
+            total / page_size
+        ) if total > 0 else 0
+
+        return MasterOfferingPage(
+            items=offerings,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
         )

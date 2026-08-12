@@ -37,3 +37,11 @@ class MasterOfferingResponse(MasterOfferingBase):
     category_id: uuid.UUID | None
     master_id: uuid.UUID
     is_active: bool
+
+
+class MasterOfferingPage(BaseModel):
+    items: list[MasterOfferingResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
