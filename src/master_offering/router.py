@@ -1,7 +1,7 @@
 import uuid
 
 from decimal import Decimal
-
+from fastapi import Query
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.categories.exceptions import CategoryInactiveError, CategoryNotFoundError
@@ -9,6 +9,7 @@ from src.master_offering.dependencies import get_offering_service
 from src.master_offering.exceptions import OfferingAccessDeniedError
 from src.master_offering.schemas import (
     MasterOfferingCreate,
+    MasterOfferingPage,
     MasterOfferingResponse,
     MasterOfferingUpdate,
     OfferingSort,
@@ -89,7 +90,7 @@ async def get_master_offerings(
 
 @router.get(
     "/offerings",
-    response_model=list[MasterOfferingResponse],
+    response_model=MasterOfferingPage,
     status_code=status.HTTP_200_OK,
 )
 async def get_public_offerings(
@@ -97,6 +98,15 @@ async def get_public_offerings(
     min_price: Decimal | None = None,
     max_price: Decimal | None = None,
     sort: OfferingSort | None = None,
+    page: int = Query(
+        default=1,
+        ge=1,
+    ),
+    page_size: int = Query(
+        default=12,
+        ge=1,
+        le=50,
+    ),
     service: MasterOfferingService = Depends(
         get_offering_service
     ),
@@ -106,6 +116,8 @@ async def get_public_offerings(
         min_price=min_price,
         max_price=max_price,
         sort=sort,
+        page=page,
+        page_size=page_size,
     )
 
 @router.get(
