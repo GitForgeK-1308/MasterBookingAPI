@@ -9,7 +9,7 @@ from src.users.exceptions import (
 )
 from src.users.models import User
 from src.users.repository import UserRepository
-from src.users.schemas import UserRegister
+from src.users.schemas import UserProfileUpdate, UserRegister
 
 
 class UserService:
@@ -93,3 +93,24 @@ class UserService:
 
 
         return user
+
+
+    async def update_profile(
+    self,
+    user: User,
+    data: UserProfileUpdate,
+) -> User:
+        data_dict = data.model_dump(
+            exclude_unset=True,
+        )
+
+        for key, value in data_dict.items():
+            setattr(
+                user,
+                key,
+                value,
+            )
+
+        return await self.repository.update(
+            user
+        )
