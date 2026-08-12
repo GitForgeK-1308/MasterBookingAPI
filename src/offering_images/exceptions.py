@@ -16,3 +16,7 @@ class OfferingImageTooLargeError(Exception):
 
 class OfferingImageAccessDeniedError(Exception):
     pass
+
+
+class OfferingNotFoundError(Exception):
+    pass

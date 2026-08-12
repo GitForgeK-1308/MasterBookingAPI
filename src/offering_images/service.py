@@ -10,6 +10,7 @@ from src.offering_images.exceptions import (
     OfferingImageAccessDeniedError,
     OfferingImageLimitExceededError,
     OfferingImageTooLargeError,
+    OfferingNotFoundError
 )
 from src.offering_images.models import OfferingImage
 from src.offering_images.repository import OfferingImageRepository
@@ -51,7 +52,7 @@ class OfferingImageService:
         )
 
         if offering is None:
-            raise OfferingImageAccessDeniedError
+            raise OfferingNotFoundError
 
         if offering.master_id != master_id:
             raise OfferingImageAccessDeniedError
