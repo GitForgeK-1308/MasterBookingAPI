@@ -111,6 +111,13 @@ class UserService:
         return user
 
 
+    def get_avatar_url(
+        self,
+        storage_key: str,
+    ) -> str:
+        return self.storage.get_url(storage_key)
+
+
     async def update_profile(
     self,
     user: User,
@@ -130,14 +137,14 @@ class UserService:
         return await self.repository.update(
             user
         )
-
-
    
     async def upload_avatar(
         self,
         user: User,
         file: UploadFile,
     ) -> User:
+
+
         content = await file.read(
             MAX_AVATAR_SIZE + 1
         )

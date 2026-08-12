@@ -47,6 +47,8 @@ class UserProfileUpdate(BaseModel):
         max_length=30,
     )
 
+class UserAvatarResponse(BaseModel):
+    avatar_url: str
 
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -64,3 +66,5 @@ class UserResponse(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+

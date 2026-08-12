@@ -3,21 +3,25 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import (
     APIRouter,
     Depends,
+    File,
     HTTPException,
+    UploadFile,
     status,
 )
 
 from src.auth.dependencies import get_current_user
 from src.auth.token import create_access_token
-from src.users.dependencies import get_user_service
+from src.users.dependencies import get_user_avatar_service, get_user_service
 from src.users.exceptions import (
+    AvatarTooLargeError,
     EmailAlreadyExistsError,
     InactiveUserError,
+    InvalidAvatarTypeError,
     InvalidCredentialsError,
 )
 
 from src.users.models import User
-from src.users.schemas import UserProfileUpdate, UserRegister, UserResponse, TokenResponse
+from src.users.schemas import UserAvatarResponse, UserProfileUpdate, UserRegister, UserResponse, TokenResponse
 from src.users.service import UserService
 
 
@@ -103,3 +107,43 @@ async def update_my_profile(
         user=current_user,
         data=data,
     )
+
+
+
+@router.post(
+    "/users/me/avatar",
+    response_model=UserAvatarResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def upload_my_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(
+        get_current_user
+    ),
+    service: UserService = Depends(
+        get_user_avatar_service
+    ),
+):
+    try:
+        user = await service.upload_avatar(
+            user=current_user,
+            file=file,
+        )
+
+        return UserAvatarResponse(
+            avatar_url=service.get_avatar_url(
+                user.avatar_storage_key
+            )
+        )
+
+    except AvatarTooLargeError:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Файл слишком большой. Максимальный размер — 5 МБ.",
+        )
+
+    except InvalidAvatarTypeError:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Разрешены только JPEG, PNG и WEBP.",
+        )
