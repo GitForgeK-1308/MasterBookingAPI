@@ -1,0 +1,67 @@
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from src.auth.dependencies import get_current_client
+from src.reviews.dependencies import get_review_service
+from src.reviews.exceptions import (
+    BookingNotCompletedError,
+    ReviewAccessDeniedError,
+    ReviewAlreadyExistsError,
+    ReviewBookingNotFoundError,
+)
+from src.reviews.schemas import ReviewCreate, ReviewResponse
+from src.reviews.service import ReviewService
+from src.users.models import User
+
+
+router = APIRouter(
+    tags=["Reviews"],
+)
+
+
+@router.post(
+    "/bookings/{booking_id}/review",
+    response_model=ReviewResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_review(
+    booking_id: uuid.UUID,
+    data: ReviewCreate,
+    current_client: User = Depends(
+        get_current_client
+    ),
+    service: ReviewService = Depends(
+        get_review_service
+    ),
+):
+    try:
+        return await service.create_review(
+            booking_id=booking_id,
+            client_id=current_client.id,
+            data=data,
+        )
+
+    except ReviewBookingNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Запись не найдена!",
+        )
+
+    except ReviewAccessDeniedError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Вы не можете оставить отзыв для чужой записи!",
+        )
+
+    except BookingNotCompletedError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Отзыв можно оставить только после завершения записи!",
+        )
+
+    except ReviewAlreadyExistsError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Для этой записи отзыв уже оставлен!",
+        )
