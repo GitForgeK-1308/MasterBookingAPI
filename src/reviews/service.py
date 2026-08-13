@@ -101,6 +101,12 @@ class ReviewService:
             )
         )
 
+        rating_distribution = (
+            await self.repository.get_rating_distribution(
+                master_id
+            )
+        )
+
         reviews = []
 
         for review, first_name, last_name in rows:
@@ -122,5 +128,6 @@ class ReviewService:
         return MasterReviewsResponse(
             average_rating=average_rating,
             reviews_count=reviews_count,
+            rating_distribution=rating_distribution,
             reviews=reviews,
         )

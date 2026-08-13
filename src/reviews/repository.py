@@ -107,3 +107,34 @@ class ReviewRepository:
         )
 
         return result.all()
+
+
+    async def get_rating_distribution(
+    self,
+    master_id: uuid.UUID,
+) -> dict[int, int]:
+        result = await self.session.execute(
+            select(
+                Review.rating,
+                func.count(Review.id),
+            )
+            .where(
+                Review.master_id == master_id
+            )
+            .group_by(
+                Review.rating
+            )
+        )
+
+        distribution = {
+            1: 0,
+            2: 0,
+            3: 0,
+            4: 0,
+            5: 0,
+        }
+
+        for rating, count in result.all():
+            distribution[rating] = count
+
+        return distribution

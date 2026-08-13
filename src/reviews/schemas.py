@@ -45,7 +45,6 @@ class ReviewPublicResponse(BaseModel):
 class MasterReviewsResponse(BaseModel):
     average_rating: float
     reviews_count: int
+    rating_distribution: dict[int, int]
     reviews: list[ReviewPublicResponse]
-
-
 
