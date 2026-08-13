@@ -104,4 +104,22 @@ class UserService:
 
 
 
-    
+    async def update_profile(
+    self,
+    user: User,
+    data: UserProfileUpdate,
+) -> User:
+        data_dict = data.model_dump(
+            exclude_unset=True,
+        )
+
+        for key, value in data_dict.items():
+            setattr(
+                user,
+                key,
+                value,
+            )
+
+        return await self.repository.update(
+            user
+        )
