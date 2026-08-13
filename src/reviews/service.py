@@ -59,3 +59,12 @@ class ReviewService:
         return await self.repository.create(
             review
         )
+
+
+    async def get_master_reviews(
+    self,
+    master_id: uuid.UUID,
+) -> list[Review]:
+        return await self.repository.get_by_master_id(
+            master_id
+        )

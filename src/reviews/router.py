@@ -65,3 +65,19 @@ async def create_review(
             status_code=status.HTTP_409_CONFLICT,
             detail="Для этой записи отзыв уже оставлен!",
         )
+
+    
+@router.get(
+    "/masters/{master_id}/reviews",
+    response_model=list[ReviewResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_master_reviews(
+    master_id: uuid.UUID,
+    service: ReviewService = Depends(
+        get_review_service
+    ),
+):
+    return await service.get_master_reviews(
+        master_id
+    )
