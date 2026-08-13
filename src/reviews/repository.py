@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.reviews.models import Review
-
+from src.users.models import User
 
 class ReviewRepository:
     def __init__(
@@ -82,3 +82,28 @@ class ReviewRepository:
             else 0.0,
             reviews_count,
         )
+
+
+    async def get_public_by_master_id(
+    self,
+    master_id: uuid.UUID,
+):
+        result = await self.session.execute(
+            select(
+                Review,
+                User.first_name,
+                User.last_name,
+            )
+            .outerjoin(
+                User,
+                User.id == Review.client_id,
+            )
+            .where(
+                Review.master_id == master_id
+            )
+            .order_by(
+                Review.created_at.desc()
+            )
+        )
+
+        return result.all()

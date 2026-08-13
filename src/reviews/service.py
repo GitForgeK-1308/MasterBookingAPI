@@ -10,7 +10,7 @@ from src.reviews.exceptions import (
 )
 from src.reviews.models import Review
 from src.reviews.repository import ReviewRepository
-from src.reviews.schemas import ReviewCreate
+from src.reviews.schemas import ReviewCreate, ReviewStatsResponse, MasterReviewsResponse, ReviewPublicResponse
 
 
 class ReviewService:
@@ -67,4 +67,60 @@ class ReviewService:
 ) -> list[Review]:
         return await self.repository.get_by_master_id(
             master_id
+        )
+
+
+    
+    async def get_master_stats(
+    self,
+    master_id: uuid.UUID,
+) -> ReviewStatsResponse:
+        average_rating, reviews_count = (
+            await self.repository.get_master_stats(
+                master_id
+            )
+        )
+
+        return ReviewStatsResponse(
+            average_rating=average_rating,
+            reviews_count=reviews_count,
+        )
+
+
+    async def get_master_reviews_with_stats(
+    self,
+    master_id: uuid.UUID,
+) -> MasterReviewsResponse:
+        rows = await self.repository.get_public_by_master_id(
+            master_id
+        )
+
+        average_rating, reviews_count = (
+            await self.repository.get_master_stats(
+                master_id
+            )
+        )
+
+        reviews = []
+
+        for review, first_name, last_name in rows:
+            if first_name is None:
+                client_name = "Удалённый пользователь"
+            else:
+                client_name = f"{first_name} {last_name}"
+
+            reviews.append(
+                ReviewPublicResponse(
+                    id=review.id,
+                    rating=review.rating,
+                    comment=review.comment,
+                    client_name=client_name,
+                    created_at=review.created_at,
+                )
+            )
+
+        return MasterReviewsResponse(
+            average_rating=average_rating,
+            reviews_count=reviews_count,
+            reviews=reviews,
         )

@@ -10,7 +10,7 @@ from src.reviews.exceptions import (
     ReviewAlreadyExistsError,
     ReviewBookingNotFoundError,
 )
-from src.reviews.schemas import ReviewCreate, ReviewResponse
+from src.reviews.schemas import ReviewCreate, ReviewResponse, ReviewStatsResponse, MasterReviewsResponse
 from src.reviews.service import ReviewService
 from src.users.models import User
 
@@ -79,5 +79,39 @@ async def get_master_reviews(
     ),
 ):
     return await service.get_master_reviews(
+        master_id
+    )
+
+
+
+@router.get(
+    "/masters/{master_id}/reviews/stats",
+    response_model=ReviewStatsResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_master_review_stats(
+    master_id: uuid.UUID,
+    service: ReviewService = Depends(
+        get_review_service
+    ),
+):
+    return await service.get_master_stats(
+        master_id
+    )
+
+
+
+@router.get(
+    "/masters/{master_id}/reviews/full",
+    response_model=MasterReviewsResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_master_reviews_with_stats(
+    master_id: uuid.UUID,
+    service: ReviewService = Depends(
+        get_review_service
+    ),
+):
+    return await service.get_master_reviews_with_stats(
         master_id
     )

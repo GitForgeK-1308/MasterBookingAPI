@@ -33,3 +33,19 @@ class ReviewResponse(BaseModel):
 class ReviewStatsResponse(BaseModel):
     average_rating: float
     reviews_count: int
+
+
+class ReviewPublicResponse(BaseModel):
+    id: uuid.UUID
+    rating: int
+    comment: str | None
+    client_name: str
+    created_at: datetime
+
+class MasterReviewsResponse(BaseModel):
+    average_rating: float
+    reviews_count: int
+    reviews: list[ReviewPublicResponse]
+
+
+
