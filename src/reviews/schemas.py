@@ -24,9 +24,12 @@ class ReviewResponse(BaseModel):
     id: uuid.UUID
     booking_id: uuid.UUID
     master_id: uuid.UUID
-    client_id: uuid.UUID
-
+    client_id: uuid.UUID | None
     rating: int
     comment: str | None
-
     created_at: datetime
+
+
+class ReviewStatsResponse(BaseModel):
+    average_rating: float
+    reviews_count: int

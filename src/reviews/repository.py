@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.reviews.models import Review
@@ -59,3 +59,26 @@ class ReviewRepository:
         await self.session.refresh(review)
 
         return review
+
+
+    async def get_master_stats(
+    self,
+    master_id: uuid.UUID,
+) -> tuple[float, int]:
+        result = await self.session.execute(
+            select(
+                func.avg(Review.rating),
+                func.count(Review.id),
+            ).where(
+                Review.master_id == master_id
+            )
+        )
+
+        average_rating, reviews_count = result.one()
+
+        return (
+            round(float(average_rating), 1)
+            if average_rating is not None
+            else 0.0,
+            reviews_count,
+        )
