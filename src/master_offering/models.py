@@ -2,6 +2,10 @@ import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from src.tags.models import (
+    Tag,
+    master_offering_tags,
+)
 from sqlalchemy import ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -75,3 +79,8 @@ class MasterOffering(Base):
     cascade="all, delete-orphan",
     passive_deletes=True,
     )
+
+    tags: Mapped[list["Tag"]] = relationship(
+    secondary=master_offering_tags,
+    back_populates="offerings",
+)

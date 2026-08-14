@@ -7,6 +7,7 @@ from src.users.models import User
 from src.categories.models import Category
 from src.offering_images.models import OfferingImage
 from src.reviews.models import Review
+from src.tags.models import Tag
 
 
 __all__ = [
@@ -19,6 +20,7 @@ __all__ = [
     "Category",
     "OfferingImage",
     "Review",
+    "Tag",
 
 
     
