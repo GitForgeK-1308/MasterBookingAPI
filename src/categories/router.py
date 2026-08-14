@@ -17,6 +17,7 @@ from src.categories.exceptions import (
 from src.categories.schemas import (
     CategoryCreate,
     CategoryResponse,
+    CategoryTreeResponse,
     CategoryUpdate,
 )
 from src.categories.service import CategoryService
@@ -58,6 +59,19 @@ async def get_all_categories(
     return await service.get_all_categories()
 
 
+@router.get(
+    "/tree",
+    response_model=list[CategoryTreeResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_category_tree(
+    service: CategoryService = Depends(
+        get_category_service
+    ),
+):
+    return await service.get_category_tree()
+
+    
 @router.post(
     "",
     response_model=CategoryResponse,
@@ -81,6 +95,12 @@ async def create_category(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Категория с таким названием или slug уже существует!",
+        )
+
+    except CategoryNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Родительская категория не найдена!",
         )
 
 

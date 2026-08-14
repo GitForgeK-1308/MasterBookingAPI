@@ -10,6 +10,7 @@ from src.categories.repository import CategoryRepository
 from src.categories.schemas import (
     CategoryCreate,
     CategoryUpdate,
+    CategoryTreeResponse
 )
 
 
@@ -134,3 +135,38 @@ class CategoryService:
         return await self.repository.update(
             category
         )
+
+
+    async def get_category_tree(
+    self,
+) -> list[CategoryTreeResponse]:
+        categories = await self.repository.get_active()
+
+        nodes = {
+            category.id: CategoryTreeResponse(
+                id=category.id,
+                name=category.name,
+                slug=category.slug,
+                parent_id=category.parent_id,
+                is_active=category.is_active,
+                children=[],
+            )
+            for category in categories
+        }
+
+        roots = []
+
+        for category in categories:
+            node = nodes[category.id]
+
+            if (
+                category.parent_id is not None
+                and category.parent_id in nodes
+            ):
+                nodes[category.parent_id].children.append(
+                    node
+                )
+            else:
+                roots.append(node)
+
+        return roots
