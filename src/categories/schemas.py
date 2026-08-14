@@ -46,3 +46,15 @@ class CategoryResponse(BaseModel):
     name: str
     slug: str
     is_active: bool
+
+
+class CategoryTreeResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    slug: str
+    parent_id: uuid.UUID | None
+    is_active: bool
+
+    children: list["CategoryTreeResponse"] = Field(
+        default_factory=list
+    )

@@ -78,3 +78,19 @@ class CategoryRepository:
         await self.session.refresh(category)
 
         return category
+
+
+    async def get_active(
+    self,
+) -> list[Category]:
+        result = await self.session.scalars(
+            select(Category)
+            .where(
+                Category.is_active.is_(True)
+            )
+            .order_by(
+                Category.name.asc()
+            )
+        )
+
+        return list(result.all())
