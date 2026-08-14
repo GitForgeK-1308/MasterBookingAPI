@@ -14,6 +14,8 @@ class CategoryCreate(BaseModel):
         max_length=100,
     )
 
+    parent_id: uuid.UUID | None = None
+
 
 class CategoryUpdate(BaseModel):
     name: str | None = Field(
@@ -28,7 +30,10 @@ class CategoryUpdate(BaseModel):
         max_length=100,
     )
 
+    parent_id: uuid.UUID | None = None
+
     is_active: bool | None = None
+    
 
 
 class CategoryResponse(BaseModel):
@@ -37,6 +42,7 @@ class CategoryResponse(BaseModel):
     )
 
     id: uuid.UUID
+    parent_id: uuid.UUID | None
     name: str
     slug: str
     is_active: bool

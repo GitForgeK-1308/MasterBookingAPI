@@ -2,8 +2,9 @@ from typing import TYPE_CHECKING
 import uuid
 
 from sqlalchemy import Boolean, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from sqlalchemy import ForeignKey
 from src.database.base import Base
 
 
@@ -16,6 +17,17 @@ class Category(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         primary_key=True,
         default=uuid.uuid4,
+    )
+
+
+    parent_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "categories.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
     )
 
     name: Mapped[str] = mapped_column(
@@ -42,4 +54,14 @@ class Category(Base):
     )
 
 
+    parent: Mapped["Category | None"] = relationship(
+    "Category",
+    remote_side="Category.id",
+    back_populates="children",
+)
+
+    children: Mapped[list["Category"]] = relationship(
+        "Category",
+        back_populates="parent",
+    )
     
