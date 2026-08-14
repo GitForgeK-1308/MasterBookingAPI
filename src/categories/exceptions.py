@@ -8,3 +8,7 @@ class CategoryAlreadyExistsError(Exception):
 
 class CategoryInactiveError(Exception):
     pass
+
+
+class CategoryInvalidParentError(Exception):
+    pass
