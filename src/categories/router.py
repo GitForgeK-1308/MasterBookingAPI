@@ -12,6 +12,7 @@ from src.categories.dependencies import get_category_service
 from src.categories.exceptions import (
     CategoryAlreadyExistsError,
     CategoryNotFoundError,
+    CategoryInvalidParentError
 )
 from src.categories.schemas import (
     CategoryCreate,
@@ -108,4 +109,10 @@ async def update_category(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Категория не найдена!",
+        )
+
+    except CategoryInvalidParentError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Нельзя создать циклическую иерархию категорий",
         )

@@ -100,16 +100,29 @@ class CategoryService:
         if "parent_id" in update_data:
             parent_id = update_data["parent_id"]
 
-            if parent_id == category.id:
-                raise CategoryInvalidParentError
+        if parent_id == category.id:
+            raise CategoryInvalidParentError
 
-            if parent_id is not None:
-                parent = await self.repository.get_by_id(
-                    parent_id
+        if parent_id is not None:
+            parent = await self.repository.get_by_id(
+                parent_id
+            )
+
+            if parent is None:
+                raise CategoryNotFoundError
+
+            current_parent = parent
+
+            while current_parent is not None:
+                if current_parent.id == category.id:
+                    raise CategoryInvalidParentError
+
+                if current_parent.parent_id is None:
+                    break
+
+                current_parent = await self.repository.get_by_id(
+                    current_parent.parent_id
                 )
-
-                if parent is None:
-                    raise CategoryNotFoundError
 
         for field, value in update_data.items():
             setattr(
