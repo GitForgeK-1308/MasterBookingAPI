@@ -10,7 +10,7 @@ from src.reviews.exceptions import (
 )
 from src.reviews.models import Review
 from src.reviews.repository import ReviewRepository
-from src.reviews.schemas import ReviewCreate, ReviewStatsResponse, MasterReviewsResponse, ReviewPublicResponse
+from src.reviews.schemas import MasterReviewResponse, ReviewCreate, ReviewStatsResponse, MasterReviewsResponse, ReviewPublicResponse
 
 
 class ReviewService:
@@ -131,3 +131,41 @@ class ReviewService:
             rating_distribution=rating_distribution,
             reviews=reviews,
         )
+
+
+    async def get_reviews_for_master_dashboard(
+    self,
+    master_id: uuid.UUID,
+) -> list[MasterReviewResponse]:
+        rows = await self.repository.get_for_master_dashboard(
+            master_id
+        )
+
+        reviews = []
+
+        for (
+            review,
+            offering_id,
+            offering_title,
+            first_name,
+            last_name,
+        ) in rows:
+
+            if first_name is None:
+                client_name = "Удалённый пользователь"
+            else:
+                client_name = f"{first_name} {last_name}"
+
+            reviews.append(
+                MasterReviewResponse(
+                    id=review.id,
+                    offering_id=offering_id,
+                    offering_title=offering_title,
+                    rating=review.rating,
+                    comment=review.comment,
+                    client_name=client_name,
+                    created_at=review.created_at,
+                )
+            )
+
+        return reviews

@@ -6,6 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.reviews.models import Review
 from src.users.models import User
 
+from src.bookings.models import Booking
+from src.master_offering.models import MasterOffering
+from src.users.models import User
+
 class ReviewRepository:
     def __init__(
         self,
@@ -138,3 +142,38 @@ class ReviewRepository:
             distribution[rating] = count
 
         return distribution
+
+
+    async def get_for_master_dashboard(
+    self,
+    master_id: uuid.UUID,
+):
+        result = await self.session.execute(
+            select(
+                Review,
+                MasterOffering.id,
+                MasterOffering.title,
+                User.first_name,
+                User.last_name,
+            )
+            .join(
+                Booking,
+                Booking.id == Review.booking_id,
+            )
+            .join(
+                MasterOffering,
+                MasterOffering.id == Booking.offering_id,
+            )
+            .outerjoin(
+                User,
+                User.id == Review.client_id,
+            )
+            .where(
+                Review.master_id == master_id
+            )
+            .order_by(
+                Review.created_at.desc()
+            )
+        )
+
+        return result.all()

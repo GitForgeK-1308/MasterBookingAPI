@@ -13,6 +13,9 @@ from src.reviews.exceptions import (
 from src.reviews.schemas import ReviewCreate, ReviewResponse, ReviewStatsResponse, MasterReviewsResponse
 from src.reviews.service import ReviewService
 from src.users.models import User
+from src.auth.dependencies import get_current_master_profile
+from src.masters.models import Master
+from src.reviews.schemas import MasterReviewResponse
 
 
 router = APIRouter(
@@ -66,6 +69,22 @@ async def create_review(
             detail="Для этой записи отзыв уже оставлен!",
         )
 
+@router.get(
+    "/masters/me/reviews",
+    response_model=list[MasterReviewResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_my_reviews(
+    current_master: Master = Depends(
+        get_current_master_profile
+    ),
+    service: ReviewService = Depends(
+        get_review_service
+    ),
+):
+    return await service.get_reviews_for_master_dashboard(
+        master_id=current_master.id
+    )
     
 @router.get(
     "/masters/{master_id}/reviews",

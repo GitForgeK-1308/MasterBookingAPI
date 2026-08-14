@@ -25,8 +25,10 @@ class ReviewResponse(BaseModel):
     booking_id: uuid.UUID
     master_id: uuid.UUID
     client_id: uuid.UUID | None
+
     rating: int
     comment: str | None
+
     created_at: datetime
 
 
@@ -37,14 +39,30 @@ class ReviewStatsResponse(BaseModel):
 
 class ReviewPublicResponse(BaseModel):
     id: uuid.UUID
+
     rating: int
     comment: str | None
+
     client_name: str
     created_at: datetime
+
 
 class MasterReviewsResponse(BaseModel):
     average_rating: float
     reviews_count: int
     rating_distribution: dict[int, int]
+
     reviews: list[ReviewPublicResponse]
 
+
+class MasterReviewResponse(BaseModel):
+    id: uuid.UUID
+
+    offering_id: uuid.UUID
+    offering_title: str
+
+    rating: int
+    comment: str | None
+
+    client_name: str
+    created_at: datetime
