@@ -167,6 +167,7 @@ class MasterOfferingService:
     min_price: Decimal | None = None,
     max_price: Decimal | None = None,
     sort: OfferingSort | None = None,
+    search: str | None = None,
     page: int = 1,
     page_size: int = 12,
 ) -> MasterOfferingPage:
@@ -178,6 +179,7 @@ class MasterOfferingService:
             min_price=min_price,
             max_price=max_price,
             sort=sort,
+            search=search,
             offset=offset,
             limit=page_size,
         )

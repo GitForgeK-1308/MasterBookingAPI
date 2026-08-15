@@ -3,13 +3,20 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, func, select, or_
 
 from src.bookings.models import Booking, BookingStatus
 
 from src.master_offering.models import MasterOffering
 from src.master_offering.schemas import OfferingSort
 from sqlalchemy.orm import selectinload
+
+from src.tags.models import (
+    Tag,
+    master_offering_tags,
+)
+
+from src.categories.models import Category
 
 
 class MasterOfferingRepository:
@@ -88,18 +95,26 @@ class MasterOfferingRepository:
         return list(result.all())
 
 
+
     async def get_public_offerings(
     self,
     category_id: uuid.UUID | None = None,
     min_price: Decimal | None = None,
     max_price: Decimal | None = None,
     sort: OfferingSort | None = None,
+    search: str | None = None,
     offset: int = 0,
     limit: int = 12,
 ) -> tuple[list[MasterOffering], int]:
 
-        query = select(MasterOffering).where(
-            MasterOffering.is_active.is_(True)
+        query = (
+            select(MasterOffering)
+            .options(
+                selectinload(MasterOffering.tags)
+            )
+            .where(
+                MasterOffering.is_active.is_(True)
+            )
         )
 
         count_query = select(
@@ -135,6 +150,73 @@ class MasterOfferingRepository:
                 MasterOffering.price <= max_price
             )
 
+        if search is not None:
+            search = search.strip()
+
+            if search:
+                search_pattern = f"%{search}%"
+
+                tag_match = (
+                    select(1)
+                    .select_from(
+                        master_offering_tags.join(
+                            Tag,
+                            Tag.id == master_offering_tags.c.tag_id,
+                        )
+                    )
+                    .where(
+                        master_offering_tags.c.offering_id
+                        == MasterOffering.id,
+                        Tag.is_active.is_(True),
+                        or_(
+                            Tag.name.ilike(
+                                search_pattern
+                            ),
+                            Tag.slug.ilike(
+                                search_pattern
+                            ),
+                        ),
+                    )
+                    .exists()
+                )
+
+                category_match = (
+                    select(1)
+                    .select_from(Category)
+                    .where(
+                        Category.id == MasterOffering.category_id,
+                        Category.is_active.is_(True),
+                        or_(
+                            Category.name.ilike(
+                                search_pattern
+                            ),
+                            Category.slug.ilike(
+                                search_pattern
+                            ),
+                        ),
+                    )
+                    .exists()
+                )
+
+                search_condition = or_(
+                    MasterOffering.title.ilike(
+                        search_pattern
+                    ),
+                    MasterOffering.description.ilike(
+                        search_pattern
+                    ),
+                    tag_match,
+                    category_match,
+                )
+
+                query = query.where(
+                    search_condition
+                )
+
+                count_query = count_query.where(
+                    search_condition
+                )
+
         if sort == OfferingSort.PRICE_ASC:
             query = query.order_by(
                 MasterOffering.price.asc()
@@ -155,7 +237,9 @@ class MasterOfferingRepository:
                         Booking.status != BookingStatus.CANCELLED,
                     ),
                 )
-                .group_by(MasterOffering.id)
+                .group_by(
+                    MasterOffering.id
+                )
                 .order_by(
                     func.count(Booking.id).desc(),
                     MasterOffering.title.asc(),
@@ -171,10 +255,10 @@ class MasterOfferingRepository:
             count_query
         )
 
-        query = query.offset(
-            offset
-        ).limit(
-            limit
+        query = (
+            query
+            .offset(offset)
+            .limit(limit)
         )
 
         result = await self.session.scalars(

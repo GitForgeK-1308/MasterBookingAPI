@@ -14,6 +14,14 @@ from src.master_offering.schemas import (
     MasterOfferingUpdate,
     OfferingSort,
 )
+
+
+from src.tags.exceptions import (
+    TagInactiveError,
+    TagNotFoundError,
+)
+
+
 from src.master_offering.service import MasterOfferingService
 
 from src.auth.dependencies import get_current_master_profile
@@ -54,6 +62,18 @@ async def create_offering(
             detail="Выбранная категория недоступна!",
         )
 
+    except TagNotFoundError:
+        raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Один или несколько тегов не найдены!",
+    )
+
+    except TagInactiveError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Один или несколько тегов неактивны!",
+        )
+
 
 @router.get(
     "/masters/me/offerings",
@@ -88,16 +108,16 @@ async def get_master_offerings(
     )
 
 
-@router.get(
-    "/offerings",
-    response_model=MasterOfferingPage,
-    status_code=status.HTTP_200_OK,
-)
 async def get_public_offerings(
     category_id: uuid.UUID | None = None,
     min_price: Decimal | None = None,
     max_price: Decimal | None = None,
     sort: OfferingSort | None = None,
+    search: str | None = Query(
+        default=None,
+        min_length=2,
+        max_length=100,
+    ),
     page: int = Query(
         default=1,
         ge=1,
@@ -116,6 +136,7 @@ async def get_public_offerings(
         min_price=min_price,
         max_price=max_price,
         sort=sort,
+        search=search,
         page=page,
         page_size=page_size,
     )
