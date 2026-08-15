@@ -2,7 +2,8 @@ import uuid
 from decimal import Decimal
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+from src.tags.schemas import TagResponse
 
 
 class OfferingSort(str, Enum):
@@ -20,7 +21,10 @@ class MasterOfferingBase(BaseModel):
 
 class MasterOfferingCreate(MasterOfferingBase):
     category_id: uuid.UUID
-
+    tag_ids: list[uuid.UUID] = Field(
+    default_factory=list,
+    max_length=10,
+)
 
 class MasterOfferingUpdate(BaseModel):
     category_id: uuid.UUID | None = None
@@ -28,6 +32,10 @@ class MasterOfferingUpdate(BaseModel):
     description: str | None = None
     price: Decimal | None = None
     duration_minutes: int | None = None
+    tag_ids: list[uuid.UUID] | None = Field(
+    default=None,
+    max_length=10,
+)
 
 
 class MasterOfferingResponse(MasterOfferingBase):
@@ -36,6 +44,9 @@ class MasterOfferingResponse(MasterOfferingBase):
     id: uuid.UUID
     category_id: uuid.UUID | None
     master_id: uuid.UUID
+    tags: list[TagResponse] = Field(
+    default_factory=list
+)
     is_active: bool
 
 

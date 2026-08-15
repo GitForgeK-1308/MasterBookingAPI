@@ -18,6 +18,7 @@ class TagService:
         repository: TagRepository,
     ):
         self.repository = repository
+        
 
     async def get_tags(
         self,

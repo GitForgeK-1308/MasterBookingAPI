@@ -9,16 +9,24 @@ from src.master_offering.models import MasterOffering
 from src.master_offering.repository import MasterOfferingRepository
 from src.master_offering.schemas import MasterOfferingCreate, MasterOfferingPage, MasterOfferingUpdate, OfferingSort
 
+from src.tags.exceptions import (
+    TagInactiveError,
+    TagNotFoundError,
+)
+from src.tags.repository import TagRepository
+
 
 class MasterOfferingService:
     def __init__(
         self, 
         repository: MasterOfferingRepository,
         category_repository: CategoryRepository,
+        tag_repository: TagRepository,
         
         ):
         self.repository = repository
         self.category_repository = category_repository
+        self.tag_repository = tag_repository
 
 
     async def get_offering_by_id(
@@ -41,10 +49,14 @@ class MasterOfferingService:
         return db
 
 
-    async def create_offering(self, master_id: uuid.UUID, data: MasterOfferingCreate):
+    async def create_offering(
+    self,
+    master_id: uuid.UUID,
+    data: MasterOfferingCreate,
+):
         category = await self.category_repository.get_by_id(
-        data.category_id
-    )
+            data.category_id
+        )
 
         if category is None:
             raise CategoryNotFoundError
@@ -52,17 +64,24 @@ class MasterOfferingService:
         if not category.is_active:
             raise CategoryInactiveError
 
-
-        new_offering= MasterOffering(
-                master_id=master_id,
-                category_id=data.category_id,
-                title=data.title,
-                description=data.description,
-                price=data.price,
-                duration_minutes=data.duration_minutes,
+        tags = await self._get_valid_tags(
+            data.tag_ids
         )
 
-        return await self.repository.create(new_offering)
+        new_offering = MasterOffering(
+            master_id=master_id,
+            category_id=data.category_id,
+            title=data.title,
+            description=data.description,
+            price=data.price,
+            duration_minutes=data.duration_minutes,
+        )
+
+        new_offering.tags = tags
+
+        return await self.repository.create(
+            new_offering
+        )
     
     
     async def update_offering(
@@ -86,6 +105,11 @@ class MasterOfferingService:
             exclude_none=True,
         )
 
+        tag_ids = data_dict.pop(
+            "tag_ids",
+            None,
+        )
+
         if "category_id" in data_dict:
             category = await self.category_repository.get_by_id(
                 data_dict["category_id"]
@@ -96,6 +120,11 @@ class MasterOfferingService:
 
             if not category.is_active:
                 raise CategoryInactiveError
+
+        if tag_ids is not None:
+            offering.tags = await self._get_valid_tags(
+                tag_ids
+            )
 
         for key, value in data_dict.items():
             setattr(
@@ -164,3 +193,27 @@ class MasterOfferingService:
             page_size=page_size,
             total_pages=total_pages,
         )
+
+
+    async def _get_valid_tags(
+    self,
+    tag_ids: list[uuid.UUID],
+):
+        unique_ids = list(
+            set(tag_ids)
+        )
+
+        tags = await self.tag_repository.get_by_ids(
+            unique_ids
+        )
+
+        if len(tags) != len(unique_ids):
+            raise TagNotFoundError
+
+        if any(
+            not tag.is_active
+            for tag in tags
+        ):
+            raise TagInactiveError
+
+        return tags

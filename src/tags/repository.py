@@ -89,3 +89,19 @@ class TagRepository:
         await self.session.refresh(tag)
 
         return tag
+
+
+    async def get_by_ids(
+    self,
+    tag_ids: list[uuid.UUID],
+) -> list[Tag]:
+        if not tag_ids:
+            return []
+
+        result = await self.session.scalars(
+            select(Tag).where(
+                Tag.id.in_(tag_ids)
+            )
+        )
+
+        return list(result.all())

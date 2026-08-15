@@ -9,6 +9,7 @@ from src.bookings.models import Booking, BookingStatus
 
 from src.master_offering.models import MasterOffering
 from src.master_offering.schemas import OfferingSort
+from sqlalchemy.orm import selectinload
 
 
 class MasterOfferingRepository:
@@ -26,12 +27,19 @@ class MasterOfferingRepository:
 
 
     async def get_by_id(
-        self,
-        offering_id: uuid.UUID
-    ):
-
+    self,
+    offering_id: uuid.UUID,
+):
         return await self.session.scalar(
-            select(MasterOffering).where(MasterOffering.id == offering_id)
+            select(MasterOffering)
+            .options(
+                selectinload(
+                    MasterOffering.tags
+                )
+            )
+            .where(
+                MasterOffering.id == offering_id
+            )
         )
 
 
